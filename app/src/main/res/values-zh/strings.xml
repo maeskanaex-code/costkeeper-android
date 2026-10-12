@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CostKeeper</string>
+
+    <!-- Main Screen -->
+    <string name="tab_expenses">支出</string>
+    <string name="tab_analytics">分析</string>
+
+    <!-- Expense Screen -->
+    <string name="balance">余额</string>
+    <string name="overview">概览</string>
+    <string name="no_data">暂无数据</string>
+    <string name="amount">金额</string>
+    <string name="category">类别</string>
+    <string name="save">保存</string>
+    <string name="expense">支出</string>
+    <string name="income">收入</string>
+
+    <!-- Analytics Screen -->
+    <string name="analytics_title">分析</string>
+    <string name="this_week">本周</string>
+    <string name="spent">已花费</string>
+    <string name="vs_last_week">对比上周</string>
+    <string name="expenses_this_week">本周支出</string>
+    <string name="income_this_week">本周收入</string>
+    <string name="total_label">总计</string>
+    <string name="no_expenses_this_week">本周暂无支出</string>
+    <string name="no_income_this_week">本周暂无收入</string>
+
+    <!-- Settings -->
+    <string name="settings">设置</string>
+    <string name="language_label">语言</string>
+    <string name="data_section">数据</string>
+    <string name="export_csv">导出 CSV</string>
+    <string name="export_expenses">导出支出</string>
+    <string name="danger_zone">危险区域</string>
+    <string name="delete_all_data">删除所有数据</string>
+    <string name="about">关于</string>
+    <string name="version">版本 1.0.0</string>
+    <string name="tagline">轻松追踪您的支出和收入</string>
+    <string name="close">关闭</string>
+    <string name="cancel">取消</string>
+    <string name="delete_everything">删除全部</string>
+    <string name="delete_confirmation_title">删除所有数据？</string>
+    <string name="delete_confirmation_message">此操作无法撤销。您的所有支出和收入记录将被永久删除。</string>
+
+    <!-- Theme -->
+    <string name="theme">主题</string>
+    <string name="light">浅色</string>
+    <string name="dark">深色</string>
+    <string name="system_default">系统默认</string>
+    <string name="custom_selected">已选择</string>
+
+    <!-- Export -->
+    <string name="share_report">分享报告</string>
+    <string name="export_to_pdf">导出 PDF</string>
+    <string name="generating_pdf">生成 PDF 中...</string>
+    <string name="exporting">导出中...</string>
+
+    <!-- Currency & Categories -->
+    <string name="currency">货币</string>
+    <string name="categories">类别</string>
+
+    <!-- Category Names -->
+    <string name="category_food_dining">餐饮美食</string>
+    <string name="category_transportation">交通出行</string>
+    <string name="category_shopping">购物</string>
+    <string name="category_entertainment">娱乐</string>
+    <string name="category_bills_utilities">账单水电</string>
+    <string name="category_healthcare">医疗健康</string>
+    <string name="category_education">教育</string>
+    <string name="category_rent">房租</string>
+    <string name="category_travel">旅游</string>
+    <string name="category_other">其他</string>
+    <string name="category_salary">工资</string>
+    <string name="category_others_income">其他收入</string>
+    <string name="search_hint">搜索...</string>
+    <!-- Budget Card -->
+    <string name="monthly_budget">每月预算</string>
+    <string name="edit">编辑</string>
+    <string name="budget_label">预算</string>
+    <string name="spent_label">已花费</string>
+    <string name="over_budget">⚠️ 超出预算</string>
+    <string name="remaining">剩余</string>
+    <string name="budget_warning">⚠️ 警告：您已使用</string>
+    <string name="set_budget">设置每月预算</string>
+    <string name="budget_amount">预算金额</string>
+    <string name="please_enter_valid_amount">请输入有效金额</string>
+</resources>

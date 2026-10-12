@@ -1,0 +1,25 @@
+*.iml
+.gradle/
+.kotlin/
+build/
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+.DS_Store
+
+# Keystore - NEVER commit
+*.jks
+*.keystore
+thekey
+keystore.properties
+
+# IDE
+.idea/caches
+.idea/libraries
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/misc.xml
+.idea/gradle.xml
