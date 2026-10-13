@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,14 +22,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mody.costkeeper.R
+import com.mody.costkeeper.ui.theme.*
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(onSplashFinished: () -> Unit) {
 
-    // Trigger navigation after animation
     LaunchedEffect(Unit) {
-        delay(2500)
+        delay(2200)
         onSplashFinished()
     }
 
@@ -38,9 +39,9 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF0F172A),
-                        Color(0xFF1E293B),
-                        Color(0xFF0F172A)
+                        DarkBackground,
+                        PrimaryBlueDark,
+                        DarkBackground
                     )
                 )
             ),
@@ -50,33 +51,30 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Logo Image (Your custom image)
             LogoImage()
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(28.dp))
 
-            // App Name
             Text(
                 text = "CostKeeper",
-                color = Color.White,
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp
+                color = TextPrimary,
+                fontSize = 34.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = (-0.5).sp
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(10.dp))
 
-            // Tagline
             Text(
                 text = "Track smart. Spend smarter.",
-                color = Color(0xFF94A3B8),
+                color = TextSecondary,
                 fontSize = 14.sp,
-                letterSpacing = 1.sp
+                letterSpacing = 1.2.sp,
+                fontWeight = FontWeight.Medium
             )
 
             Spacer(Modifier.height(48.dp))
 
-            // Animated Dots
             AnimatedDots()
         }
     }
@@ -86,23 +84,30 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
 fun LogoImage() {
     val scale by rememberInfiniteTransition().animateFloat(
         initialValue = 1f,
-        targetValue = 1.08f,
+        targetValue = 1.06f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = EaseInOutCubic),
+            animation = tween(1400, easing = EaseInOutCubic),
             repeatMode = RepeatMode.Reverse
         )
     )
 
-    // Your custom image
-    Image(
-        painter = painterResource(id = R.drawable.ic_splash_logo), // Your image name
-        contentDescription = "App Logo",
+    Box(
         modifier = Modifier
-            .size(120.dp)
+            .size(132.dp)
             .scale(scale)
-            .clip(RoundedCornerShape(28.dp)),
-        contentScale = ContentScale.Crop
-    )
+            .clip(RoundedCornerShape(32.dp))
+            .background(PrimaryBlue.copy(alpha = 0.15f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_splash_logo),
+            contentDescription = "App Logo",
+            modifier = Modifier
+                .size(112.dp)
+                .clip(RoundedCornerShape(28.dp)),
+            contentScale = ContentScale.Crop
+        )
+    }
 }
 
 @Composable
@@ -116,7 +121,7 @@ fun AnimatedDots() {
                 initialValue = 0.3f,
                 targetValue = 1f,
                 animationSpec = infiniteRepeatable(
-                    animation = tween(600, delayMillis = index * 200),
+                    animation = tween(700, delayMillis = index * 220, easing = LinearEasing),
                     repeatMode = RepeatMode.Reverse
                 )
             )
@@ -126,7 +131,7 @@ fun AnimatedDots() {
                     .size(10.dp)
                     .alpha(alpha)
                     .clip(CircleShape)
-                    .background(Color(0xFF60A5FA))
+                    .background(PrimaryBlue)
             )
         }
     }

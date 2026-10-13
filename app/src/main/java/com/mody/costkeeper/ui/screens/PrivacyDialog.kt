@@ -1,9 +1,10 @@
 package com.mody.costkeeper.ui.screens
 
 import android.content.Context
+import android.os.Build
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -22,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.util.*
+import com.mody.costkeeper.ui.theme.*
 
 @Composable
 fun PrivacyDialog(
@@ -48,9 +49,9 @@ fun PrivacyDialog(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF0F172A),
-                        Color(0xFF1A2332),
-                        Color(0xFF0F172A)
+                        DarkBackground,
+                        PrimaryBlueDark,
+                        DarkBackground
                     )
                 )
             ),
@@ -64,17 +65,17 @@ fun PrivacyDialog(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Shield Icon
+            // Shield icon
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(96.dp)
                     .scale(scale)
                     .clip(CircleShape)
                     .background(
                         brush = Brush.linearGradient(
                             colors = listOf(
-                                Color(0xFF3B82F6),
-                                Color(0xFF1E40AF)
+                                PrimaryBlue,
+                                PrimaryBlueDark
                             )
                         )
                     ),
@@ -82,52 +83,43 @@ fun PrivacyDialog(
             ) {
                 Text(
                     text = "🛡️",
-                    fontSize = 36.sp
+                    fontSize = 44.sp
                 )
             }
 
             Spacer(Modifier.height(28.dp))
 
-            // Title
             Text(
                 text = getTitleText(currentLanguage),
                 textAlign = TextAlign.Center,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                lineHeight = 32.sp
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.ExtraBold,
+                color = TextPrimary
             )
 
             Spacer(Modifier.height(20.dp))
 
-            // Description Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(Color(0xFF111827)),
-                shape = RoundedCornerShape(20.dp),
-                border = androidx.compose.foundation.BorderStroke(
-                    1.dp,
-                    Color(0xFF60A5FA).copy(alpha = 0.2f)
-                )
+                colors = CardDefaults.cardColors(containerColor = DarkSurface),
+                shape = RoundedCornerShape(20.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(20.dp)
                 ) {
-                    // Welcome message
                     Text(
                         text = getWelcomeText(currentLanguage),
-                        color = Color.White,
+                        color = TextPrimary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
+                        style = MaterialTheme.typography.titleMedium
                     )
 
                     Spacer(Modifier.height(12.dp))
 
-                    // Privacy message
                     Text(
                         text = getPrivacyMessage(currentLanguage),
-                        color = Color(0xFFCBD5E1),
-                        fontSize = 13.sp,
+                        color = TextSecondary,
+                        style = MaterialTheme.typography.bodyMedium,
                         lineHeight = 20.sp
                     )
                 }
@@ -135,61 +127,57 @@ fun PrivacyDialog(
 
             Spacer(Modifier.height(24.dp))
 
-            // Agree Button
             Button(
                 onClick = onAgree,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
+                    .height(54.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF3B82F6)
+                    containerColor = PrimaryBlue
                 ),
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
                     text = getAgreeButtonText(currentLanguage),
-                    color = Color.White,
-                    fontSize = 16.sp,
+                    color = TextOnAccent,
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
 
             Spacer(Modifier.height(12.dp))
 
-            // Privacy Policy Link
-            // Privacy Policy Link - Improved to prevent cropping
             OutlinedButton(
                 onClick = onPrivacyPolicy,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()  // Changed from fixed height (48.dp) to wrapContentHeight
-                    .padding(vertical = 8.dp),  // Add some vertical padding
+                    .wrapContentHeight()
+                    .padding(vertical = 4.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color(0xFF60A5FA)
+                    contentColor = PrimaryBlue
                 ),
-                border = androidx.compose.foundation.BorderStroke(
+                border = BorderStroke(
                     1.dp,
-                    Color(0xFF60A5FA).copy(alpha = 0.3f)
+                    PrimaryBlue.copy(alpha = 0.4f)
                 ),
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
                     text = getPrivacyPolicyText(currentLanguage),
-                    color = Color(0xFF60A5FA),
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Center,  // Center the text
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)  // Add inner padding
+                    color = PrimaryBlue,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
             }
 
             Spacer(Modifier.height(16.dp))
 
-            // Exit Button
             TextButton(onClick = onExit) {
                 Text(
                     text = getExitButtonText(currentLanguage),
-                    color = Color(0xFF64748B),
-                    fontSize = 13.sp
+                    color = TextMuted,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
@@ -200,7 +188,7 @@ fun PrivacyDialog(
 
 // Function to detect current system language
 fun getCurrentLanguage(context: Context): String {
-    val locale = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+    val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         context.resources.configuration.locales.get(0)
     } else {
         context.resources.configuration.locale
@@ -210,11 +198,10 @@ fun getCurrentLanguage(context: Context): String {
     return when {
         language.startsWith("ru") -> "ru"
         language.startsWith("zh") -> "zh"
-        else -> "en" // Default to English for any other language
+        else -> "en"
     }
 }
 
-// Title text
 fun getTitleText(language: String): String {
     return when (language) {
         "ru" -> "Политика конфиденциальности"
@@ -223,7 +210,6 @@ fun getTitleText(language: String): String {
     }
 }
 
-// Welcome message
 fun getWelcomeText(language: String): String {
     return when (language) {
         "ru" -> "Добро пожаловать в CostKeeper! 👋"
@@ -232,7 +218,6 @@ fun getWelcomeText(language: String): String {
     }
 }
 
-// Privacy message
 fun getPrivacyMessage(language: String): String {
     return when (language) {
         "ru" -> "Ваша конфиденциальность важна. Все ваши финансовые данные остаются на вашем устройстве. Мы не собираем, не храним и не передаем личную информацию."
@@ -241,7 +226,6 @@ fun getPrivacyMessage(language: String): String {
     }
 }
 
-// Agree button text
 fun getAgreeButtonText(language: String): String {
     return when (language) {
         "ru" -> "Согласен и продолжить ✓"
@@ -250,16 +234,14 @@ fun getAgreeButtonText(language: String): String {
     }
 }
 
-// Privacy policy button text - SHORTENED for Russian
 fun getPrivacyPolicyText(language: String): String {
     return when (language) {
-        "ru" -> "📄 Политика конфиденциальности"  // Changed from "Прочитать политику конфиденциальности"
+        "ru" -> "📄 Политика конфиденциальности"
         "zh" -> "📄 隐私政策"
         else -> "📄 Privacy Policy"
     }
 }
 
-// Exit button text
 fun getExitButtonText(language: String): String {
     return when (language) {
         "ru" -> "Не сейчас"
