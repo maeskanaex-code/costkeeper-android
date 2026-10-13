@@ -12,20 +12,22 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.res.stringResource
-import com.mody.costkeeper.ui.components.AnalyticsEmptyState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mody.costkeeper.R
 import com.mody.costkeeper.data.local.ExpenseEntity
+import com.mody.costkeeper.ui.components.AnalyticsEmptyState
+import com.mody.costkeeper.ui.components.CategoryPieChart
 import com.mody.costkeeper.ui.components.YandexBannerAd
-
+import com.mody.costkeeper.ui.theme.*
 import com.mody.costkeeper.ui.viewmodel.ExpenseViewModel
 import com.mody.costkeeper.utils.AppCurrency
 import java.text.SimpleDateFormat
@@ -39,25 +41,34 @@ fun AnalyticsScreen(
     currency: AppCurrency
 ) {
     val expenses by viewModel.expenses.collectAsState(initial = emptyList())
-
     val scrollState = rememberScrollState()
 
-    val backgroundColor = if (isDarkTheme) Color(0xFF0F172A) else Color(0xFFF1F5F9)
+    val background = if (isDarkTheme) DarkBackground else LightBackground
+    val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
+    val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(background)
             .verticalScroll(scrollState)
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = stringResource(R.string.analytics_title),
-            color = if (isDarkTheme) Color.White else Color(0xFF1E293B),
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold
-        )
+        // Header
+        Column {
+            Text(
+                text = "Analytics",
+                color = textPrimary,
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.ExtraBold
+            )
+            Text(
+                text = "Your last 7 days at a glance",
+                color = textMuted,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
 
         if (expenses.isEmpty()) {
             AnalyticsEmptyState(isDarkTheme = isDarkTheme)
@@ -65,8 +76,9 @@ fun AnalyticsScreen(
             WeeklySummaryCard(expenses, isDarkTheme, currency)
             WeeklyBarChartCard(expenses, isDarkTheme)
             WeeklyComparisonCard(expenses, isDarkTheme, currency)
-            CategoryBreakdownCard(expenses, stringResource(R.string.expenses_this_week), isIncome = false, isDarkTheme, currency)
-            CategoryBreakdownCard(expenses, stringResource(R.string.income_this_week), isIncome = true, isDarkTheme, currency)
+            CategoryPieChartCard(expenses, isDarkTheme, currency)
+            CategoryBreakdownCard(expenses, "Expenses by Category", isIncome = false, isDarkTheme, currency)
+            CategoryBreakdownCard(expenses, "Income by Category", isIncome = true, isDarkTheme, currency)
         }
 
         Spacer(Modifier.height(8.dp))
@@ -75,6 +87,8 @@ fun AnalyticsScreen(
             modifier = Modifier.padding(horizontal = 8.dp),
             adUnitId = "R-M-19253258-1"
         )
+
+        Spacer(Modifier.height(16.dp))
     }
 }
 
@@ -96,12 +110,15 @@ fun WeeklySummaryCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, curre
 
     val balance = weeklyIncome - weeklyExpense
 
+    val cardBg = if (isDarkTheme) DarkSurface else LightSurface
+    val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
+    val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
+
     Card(
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDarkTheme) Color(0xFF1E293B) else Color.White
-        ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDarkTheme) 0.dp else 2.dp)
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
@@ -109,26 +126,27 @@ fun WeeklySummaryCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, curre
                 .padding(20.dp)
         ) {
             Text(
-                text = stringResource(R.string.this_week),
-                color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                fontSize = 12.sp
+                text = "THIS WEEK",
+                color = textMuted,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.height(8.dp))
 
             Text(
                 text = "${currency.symbol}${"%.2f".format(balance)}",
-                color = if (balance >= 0) Color(0xFF4ADE80) else Color(0xFFF87171),
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
+                color = if (balance >= 0) IncomeGreen else ExpenseRed,
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.ExtraBold
             )
             Text(
-                text = stringResource(R.string.balance),
-                color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                fontSize = 12.sp
+                text = "Net balance",
+                color = textMuted,
+                style = MaterialTheme.typography.bodySmall
             )
 
             Spacer(Modifier.height(16.dp))
-            HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
+            HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
             Spacer(Modifier.height(16.dp))
 
             Row(
@@ -140,20 +158,21 @@ fun WeeklySummaryCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, curre
                         Box(
                             modifier = Modifier
                                 .size(8.dp)
-                                .background(Color(0xFF4ADE80), CircleShape)
+                                .clip(CircleShape)
+                                .background(IncomeGreen)
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            text = stringResource(R.string.income),
-                            color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                            fontSize = 12.sp
+                            text = "Income",
+                            color = textMuted,
+                            style = MaterialTheme.typography.labelMedium
                         )
                     }
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = "${currency.symbol}${"%.2f".format(weeklyIncome)}",
-                        color = Color(0xFF4ADE80),
-                        fontSize = 18.sp,
+                        color = IncomeGreen,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -162,7 +181,7 @@ fun WeeklySummaryCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, curre
                     modifier = Modifier
                         .width(1.dp)
                         .height(40.dp)
-                        .background(if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
+                        .background(if (isDarkTheme) DividerDark else LightDivider)
                 )
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -170,20 +189,21 @@ fun WeeklySummaryCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, curre
                         Box(
                             modifier = Modifier
                                 .size(8.dp)
-                                .background(Color(0xFFF87171), CircleShape)
+                                .clip(CircleShape)
+                                .background(ExpenseRed)
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            text = stringResource(R.string.expense),
-                            color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                            fontSize = 12.sp
+                            text = "Expense",
+                            color = textMuted,
+                            style = MaterialTheme.typography.labelMedium
                         )
                     }
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = "${currency.symbol}${"%.2f".format(weeklyExpense)}",
-                        color = Color(0xFFF87171),
-                        fontSize = 18.sp,
+                        color = ExpenseRed,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -221,37 +241,56 @@ fun WeeklyBarChartCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean) {
 
     val maxValue = dailyData.maxOfOrNull { maxOf(it.second, it.third) } ?: 0.0
 
+    val cardBg = if (isDarkTheme) DarkSurface else LightSurface
+    val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
+    val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
+
     Card(
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDarkTheme) Color(0xFF1E293B) else Color.White
-        ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDarkTheme) 0.dp else 2.dp)
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp)
         ) {
+            Text(
+                text = "WEEKLY ACTIVITY",
+                color = textMuted,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Daily income vs expense",
+                color = textPrimary,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(Modifier.height(16.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(modifier = Modifier.size(10.dp).background(Color(0xFF4ADE80), CircleShape))
+                Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(IncomeGreen))
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    text = stringResource(R.string.income),
-                    color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                    fontSize = 11.sp
+                    text = "Income",
+                    color = textMuted,
+                    style = MaterialTheme.typography.labelSmall
                 )
                 Spacer(Modifier.width(16.dp))
-                Box(modifier = Modifier.size(10.dp).background(Color(0xFFF87171), CircleShape))
+                Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(ExpenseRed))
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    text = stringResource(R.string.expense),
-                    color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                    fontSize = 11.sp
+                    text = "Expense",
+                    color = textMuted,
+                    style = MaterialTheme.typography.labelSmall
                 )
             }
 
@@ -265,9 +304,9 @@ fun WeeklyBarChartCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean) {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.no_data),
-                        color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                        fontSize = 14.sp
+                        text = "No activity this week",
+                        color = textMuted,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             } else {
@@ -278,49 +317,51 @@ fun WeeklyBarChartCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean) {
                 ) {
                     val groupCount = dailyData.size
                     val groupWidth = size.width / groupCount
-                    val barWidth = groupWidth * 0.3f
-                    val gapBetweenBars = barWidth * 0.3f
+                    val barWidth = groupWidth * 0.28f
+                    val gap = barWidth * 0.4f
                     val safeMax = if (maxValue > 0) maxValue else 1.0
+                    val labelHeightPx = 40f
 
                     dailyData.forEachIndexed { index, (label, income, expense) ->
                         val incomeRatio = (income / safeMax).toFloat()
                         val expenseRatio = (expense / safeMax).toFloat()
 
-                        val incomeHeight = (size.height - 40f) * incomeRatio
-                        val expenseHeight = (size.height - 40f) * expenseRatio
+                        val incomeHeight = (size.height - labelHeightPx) * incomeRatio
+                        val expenseHeight = (size.height - labelHeightPx) * expenseRatio
 
                         val groupStartX = index * groupWidth
                         val centerX = groupStartX + groupWidth / 2
 
-                        val incomeX = centerX - barWidth - gapBetweenBars / 2
-                        val expenseX = centerX + gapBetweenBars / 2
+                        val incomeX = centerX - barWidth - gap / 2
+                        val expenseX = centerX + gap / 2
 
                         if (incomeHeight > 0f) {
                             drawRoundRect(
-                                color = Color(0xFF4ADE80),
-                                topLeft = Offset(incomeX, size.height - 40f - incomeHeight),
+                                color = IncomeGreen,
+                                topLeft = Offset(incomeX, size.height - labelHeightPx - incomeHeight),
                                 size = Size(barWidth, incomeHeight),
-                                cornerRadius = CornerRadius(3f, 3f)
+                                cornerRadius = CornerRadius(4f, 4f)
                             )
                         }
 
                         if (expenseHeight > 0f) {
                             drawRoundRect(
-                                color = Color(0xFFF87171),
-                                topLeft = Offset(expenseX, size.height - 40f - expenseHeight),
+                                color = ExpenseRed,
+                                topLeft = Offset(expenseX, size.height - labelHeightPx - expenseHeight),
                                 size = Size(barWidth, expenseHeight),
-                                cornerRadius = CornerRadius(3f, 3f)
+                                cornerRadius = CornerRadius(4f, 4f)
                             )
                         }
 
                         drawContext.canvas.nativeCanvas.drawText(
                             label,
                             centerX,
-                            size.height - 8f,
+                            size.height - 10f,
                             android.graphics.Paint().apply {
-                                color = if (isDarkTheme) android.graphics.Color.parseColor("#94A3B8") else android.graphics.Color.parseColor("#475569")
+                                color = if (isDarkTheme) android.graphics.Color.parseColor("#71717A") else android.graphics.Color.parseColor("#52525B")
                                 textAlign = android.graphics.Paint.Align.CENTER
-                                textSize = 26f
+                                textSize = 28f
+                                isAntiAlias = true
                             }
                         )
                     }
@@ -367,12 +408,15 @@ fun WeeklyComparisonCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, cu
     val expenseDiff = thisWeekExpense - lastWeekExpense
     val expensePercent = if (lastWeekExpense > 0) ((expenseDiff / lastWeekExpense) * 100) else 0.0
 
+    val cardBg = if (isDarkTheme) DarkSurface else LightSurface
+    val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
+    val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
+
     Card(
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDarkTheme) Color(0xFF1E293B) else Color.White
-        ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDarkTheme) 0.dp else 2.dp)
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
@@ -380,10 +424,17 @@ fun WeeklyComparisonCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, cu
                 .padding(20.dp)
         ) {
             Text(
-                text = stringResource(R.string.vs_last_week),
-                color = if (isDarkTheme) Color.White else Color(0xFF1E293B),
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                text = "VS LAST WEEK",
+                color = textMuted,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "How this week compares",
+                color = textPrimary,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(16.dp))
 
@@ -393,20 +444,21 @@ fun WeeklyComparisonCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, cu
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = stringResource(R.string.income),
-                        color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                        fontSize = 12.sp
+                        text = "Income",
+                        color = textMuted,
+                        style = MaterialTheme.typography.labelMedium
                     )
                     Text(
                         text = "${currency.symbol}${"%.2f".format(thisWeekIncome)}",
-                        color = Color(0xFF4ADE80),
-                        fontSize = 16.sp,
+                        color = IncomeGreen,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "${if (incomeDiff > 0) "+" else ""}${"%.1f".format(incomePercent)}%",
-                        color = if (incomeDiff > 0) Color(0xFF4ADE80) else Color(0xFFF87171),
-                        fontSize = 13.sp
+                        color = if (incomeDiff > 0) IncomeGreen else ExpenseRed,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
 
@@ -414,27 +466,94 @@ fun WeeklyComparisonCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, cu
                     modifier = Modifier
                         .width(1.dp)
                         .height(50.dp)
-                        .background(if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
+                        .background(if (isDarkTheme) DividerDark else LightDivider)
                 )
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = stringResource(R.string.expense),
-                        color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                        fontSize = 12.sp
+                        text = "Expense",
+                        color = textMuted,
+                        style = MaterialTheme.typography.labelMedium
                     )
                     Text(
                         text = "${currency.symbol}${"%.2f".format(thisWeekExpense)}",
-                        color = Color(0xFFF87171),
-                        fontSize = 16.sp,
+                        color = ExpenseRed,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "${if (expenseDiff > 0) "+" else ""}${"%.1f".format(expensePercent)}%",
-                        color = if (expenseDiff > 0) Color(0xFFF87171) else Color(0xFF4ADE80),
-                        fontSize = 13.sp
+                        color = if (expenseDiff > 0) ExpenseRed else IncomeGreen,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
+            }
+        }
+    }
+}
+
+/* ================= PIE CHART CARD ================= */
+
+@Composable
+fun CategoryPieChartCard(
+    expenses: List<ExpenseEntity>,
+    isDarkTheme: Boolean,
+    currency: AppCurrency
+) {
+    val cardBg = if (isDarkTheme) DarkSurface else LightSurface
+    val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
+    val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
+
+    val weekStart = getStartOfDay(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(6))
+    val weeklyExpenses = remember(expenses) { expenses.filter { it.date >= weekStart } }
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
+            Text(
+                text = "SPENDING BREAKDOWN",
+                color = textMuted,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Tap a slice for details",
+                color = textPrimary,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            if (weeklyExpenses.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No expenses this week",
+                        color = textMuted,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            } else {
+                CategoryPieChart(
+                    expenses = weeklyExpenses,
+                    isDarkTheme = isDarkTheme,
+                    currency = currency
+                )
             }
         }
     }
@@ -467,27 +586,23 @@ fun CategoryBreakdownCard(
     val hasData = total > 0.0
 
     val colors = if (isIncome) {
-        listOf(
-            Color(0xFF4ADE80), Color(0xFF34D399), Color(0xFF6EE7B7),
-            Color(0xFFA7F3D0), Color(0xFF22C55E), Color(0xFF10B981)
-        )
+        listOf(IncomeGreen, Color(0xFF34D399), Color(0xFF6EE7B7), Color(0xFF10B981))
     } else {
-        listOf(
-            Color(0xFFF87171), Color(0xFFFB7185), Color(0xFFFCA5A5),
-            Color(0xFFDC2626), Color(0xFFE11D48), Color(0xFFBE123C)
-        )
+        listOf(ExpenseRed, Color(0xFFF87171), Color(0xFFFB7185), Color(0xFFDC2626))
     }
 
-    val titleColor = if (isIncome) Color(0xFF4ADE80) else Color(0xFFF87171)
-    val emptyText = if (isIncome) stringResource(R.string.no_income_this_week)
-    else stringResource(R.string.no_expenses_this_week)
+    val titleColor = if (isIncome) IncomeGreen else ExpenseRed
+    val emptyText = if (isIncome) "No income this week" else "No expenses this week"
+
+    val cardBg = if (isDarkTheme) DarkSurface else LightSurface
+    val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
+    val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
 
     Card(
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDarkTheme) Color(0xFF1E293B) else Color.White
-        ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDarkTheme) 0.dp else 2.dp)
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
@@ -495,24 +610,25 @@ fun CategoryBreakdownCard(
                 .padding(20.dp)
         ) {
             Text(
-                text = title,
-                color = if (isDarkTheme) Color.White else Color(0xFF1E293B),
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                text = title.uppercase(),
+                color = textMuted,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "${currency.symbol}${"%.2f".format(total)} ${stringResource(R.string.total_label)}",
+                text = "${currency.symbol}${"%.2f".format(total)} total",
                 color = titleColor,
-                fontSize = 13.sp
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
 
             if (!hasData) {
                 Text(
                     text = emptyText,
-                    color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                    fontSize = 13.sp
+                    color = textMuted,
+                    style = MaterialTheme.typography.bodyMedium
                 )
             } else {
                 weeklyByCategory.forEachIndexed { index, (category, amount) ->
@@ -521,7 +637,7 @@ fun CategoryBreakdownCard(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 6.dp),
+                            .padding(vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -532,26 +648,29 @@ fun CategoryBreakdownCard(
                             Box(
                                 modifier = Modifier
                                     .size(10.dp)
-                                    .background(colors[index % colors.size], CircleShape)
+                                    .clip(CircleShape)
+                                    .background(colors[index % colors.size])
                             )
-                            Spacer(Modifier.width(8.dp))
+                            Spacer(Modifier.width(10.dp))
                             Text(
                                 text = category,
-                                color = if (isDarkTheme) Color.White else Color(0xFF1E293B),
-                                fontSize = 14.sp,
+                                color = textPrimary,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
                                 maxLines = 1
                             )
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
                                 text = "${currency.symbol}${"%.2f".format(amount)}",
-                                color = if (isDarkTheme) Color.White else Color(0xFF1E293B),
-                                fontSize = 14.sp
+                                color = textPrimary,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 text = "${"%.0f".format(percent)}%",
-                                color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                                fontSize = 12.sp
+                                color = textMuted,
+                                style = MaterialTheme.typography.labelSmall
                             )
                         }
                     }
