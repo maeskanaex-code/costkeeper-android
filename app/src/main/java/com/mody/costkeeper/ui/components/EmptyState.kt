@@ -1,15 +1,19 @@
 package com.mody.costkeeper.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mody.costkeeper.ui.theme.*
 
 @Composable
 fun EmptyState(
@@ -18,33 +22,48 @@ fun EmptyState(
     isDarkTheme: Boolean = true,
     modifier: Modifier = Modifier
 ) {
+    val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
+    val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "📊",
-            fontSize = 64.sp,
-            color = Color(0xFF60A5FA)
-        )
+        // Icon in a soft circle
+        Box(
+            modifier = Modifier
+                .size(88.dp)
+                .clip(CircleShape)
+                .background(
+                    if (isDarkTheme) PrimaryBlueContainer.copy(alpha = 0.4f)
+                    else LightPrimaryBlueContainer
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "📊",
+                fontSize = 44.sp
+            )
+        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             text = title,
-            color = if (isDarkTheme) Color.White else Color(0xFF1E293B),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
+            color = textPrimary,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = message,
-            color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-            fontSize = 14.sp,
+            color = textMuted,
+            style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center
         )
     }

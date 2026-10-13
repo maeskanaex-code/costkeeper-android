@@ -1,16 +1,27 @@
 package com.mody.costkeeper.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mody.costkeeper.data.local.ExpenseEntity
+import com.mody.costkeeper.ui.theme.*
 import com.mody.costkeeper.ui.viewmodel.ExpenseViewModel
 import com.mody.costkeeper.utils.AppCurrency
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,31 +32,50 @@ fun EditExpenseDialog(
     isDarkTheme: Boolean = true,
     currency: AppCurrency = AppCurrency.EUR
 ) {
-    var amount by remember { mutableStateOf(kotlin.math.abs(expense.amount).toString()) }
+    var amount by remember { mutableStateOf(abs(expense.amount).toString()) }
     var category by remember { mutableStateOf(expense.category) }
     var showError by remember { mutableStateOf(false) }
+
+    val isIncome = expense.amount > 0
 
     val expenseCategories = listOf(
         "Food & Dining", "Transportation", "Shopping", "Entertainment",
         "Bills & Utilities", "Healthcare", "Education", "Rent", "Travel", "Other"
     )
     val incomeCategories = listOf("Salary", "Others")
-    val categories = if (expense.amount > 0) incomeCategories else expenseCategories
+    val categories = if (isIncome) incomeCategories else expenseCategories
+
+    val surfaceBg = if (isDarkTheme) DarkSurfaceElevated else LightSurfaceElevated
+    val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
+    val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
+    val inputBorder = if (isDarkTheme) BorderDark else LightBorder
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = if (isDarkTheme) Color(0xFF1E293B) else Color.White,
+        containerColor = surfaceBg,
+        shape = RoundedCornerShape(24.dp),
         title = {
-            Text(
-                text = "Edit Expense",
-                color = if (isDarkTheme) Color.White else Color(0xFF1E293B)
-            )
+            Column {
+                Text(
+                    text = "Edit ${if (isIncome) "Income" else "Expense"}",
+                    color = textPrimary,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Update the details below",
+                    color = textMuted,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Amount field
                 OutlinedTextField(
                     value = amount,
                     onValueChange = {
@@ -54,71 +84,59 @@ fun EditExpenseDialog(
                             showError = false
                         }
                     },
-                    label = { Text("Amount (${currency.symbol})") },
+                    label = { Text("Amount") },
+                    leadingIcon = {
+                        Text(
+                            text = currency.symbol,
+                            color = PrimaryBlue,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
                     isError = showError,
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                    ),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = if (isDarkTheme) Color.White else Color(0xFF1E293B),
-                        unfocusedTextColor = if (isDarkTheme) Color.White else Color(0xFF1E293B),
-                        focusedLabelColor = if (isDarkTheme) Color.White else Color(0xFF3B82F6),
-                        unfocusedLabelColor = if (isDarkTheme) Color(0xFFCBD5E1) else Color(0xFF64748B)
+                        focusedTextColor = textPrimary,
+                        unfocusedTextColor = textPrimary,
+                        focusedBorderColor = PrimaryBlue,
+                        unfocusedBorderColor = inputBorder,
+                        cursorColor = PrimaryBlue,
+                        focusedLabelColor = PrimaryBlue,
+                        unfocusedLabelColor = textMuted
                     ),
+                    shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
-
-                var expanded by remember { mutableStateOf(false) }
-
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = it }
-                ) {
-                    OutlinedTextField(
-                        value = category,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Category") },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = if (isDarkTheme) Color.White else Color(0xFF1E293B),
-                            unfocusedTextColor = if (isDarkTheme) Color.White else Color(0xFF1E293B),
-                            focusedLabelColor = if (isDarkTheme) Color.White else Color(0xFF3B82F6),
-                            unfocusedLabelColor = if (isDarkTheme) Color(0xFFCBD5E1) else Color(0xFF64748B)
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.background(if (isDarkTheme) Color(0xFF1E293B) else Color.White)
-                    ) {
-                        categories.forEach { cat ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = cat,
-                                        color = if (isDarkTheme) Color.White else Color(0xFF1E293B)
-                                    )
-                                },
-                                onClick = {
-                                    category = cat
-                                    expanded = false
-                                }
-                            )
-                        }
-                    }
-                }
 
                 if (showError) {
                     Text(
                         text = "Please enter a valid amount",
-                        color = Color(0xFFF87171),
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(top = 4.dp)
+                        color = ExpenseRed,
+                        style = MaterialTheme.typography.bodySmall
                     )
+                }
+
+                // Category label
+                Text(
+                    text = "CATEGORY",
+                    color = textMuted,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                // Category chips (horizontal scroll)
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(categories) { cat ->
+                        CategoryChip(
+                            name = cat,
+                            selected = category == cat,
+                            onClick = { category = cat },
+                            isDarkTheme = isDarkTheme
+                        )
+                    }
                 }
             }
         },
@@ -130,24 +148,62 @@ fun EditExpenseDialog(
                         showError = true
                         return@Button
                     }
-
                     viewModel.deleteExpense(expense)
-                    val finalAmount = if (expense.amount > 0) v else -v
+                    val finalAmount = if (isIncome) v else -v
                     viewModel.addExpense(category, finalAmount, category)
                     onDismiss()
                 },
-                colors = ButtonDefaults.buttonColors(Color(0xFF3B82F6))
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
             ) {
-                Text("Save Changes", color = Color.White)
+                Text(
+                    text = "Save Changes",
+                    color = TextOnAccent,
+                    fontWeight = FontWeight.Bold
+                )
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text(
                     text = "Cancel",
-                    color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B)
+                    color = textMuted
                 )
             }
         }
     )
+}
+
+@Composable
+private fun CategoryChip(
+    name: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    isDarkTheme: Boolean
+) {
+    val bg = if (selected) PrimaryBlue else if (isDarkTheme) DarkSurface else LightSurface
+    val textColor = if (selected) TextOnAccent else if (isDarkTheme) TextSecondary else LightTextSecondary
+    val border = if (selected) PrimaryBlue else if (isDarkTheme) BorderDark else LightBorder
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(bg)
+            .border(1.dp, border, RoundedCornerShape(999.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = name,
+            color = textColor,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+        )
+    }
 }

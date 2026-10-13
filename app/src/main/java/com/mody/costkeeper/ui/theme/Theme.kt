@@ -1,55 +1,113 @@
 package com.mody.costkeeper.ui.theme
 
 import android.os.Build
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// Dark Theme Colors
+// ==================== DARK COLOR SCHEME (v2.0 Bold) ====================
+
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF60A5FA),
-    secondary = Color(0xFF34D399),
-    tertiary = Color(0xFFFBBF24),
-    background = Color(0xFF0F172A),
-    surface = Color(0xFF1E293B),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.Black,
-    onBackground = Color.White,
-    onSurface = Color.White,
-    primaryContainer = Color(0xFF1E40AF),
-    secondaryContainer = Color(0xFF065F46)
+    primary = PrimaryBlue,
+    onPrimary = TextOnAccent,
+    primaryContainer = PrimaryBlueContainer,
+    onPrimaryContainer = PrimaryBlueVivid,
+
+    secondary = IncomeGreen,
+    onSecondary = TextOnAccent,
+    secondaryContainer = IncomeGreenContainer,
+    onSecondaryContainer = IncomeGreen,
+
+    tertiary = ExpenseRed,
+    onTertiary = TextOnAccent,
+    tertiaryContainer = ExpenseRedContainer,
+    onTertiaryContainer = ExpenseRed,
+
+    error = ExpenseRed,
+    onError = TextOnAccent,
+    errorContainer = ExpenseRedContainer,
+    onErrorContainer = ExpenseRed,
+
+    background = DarkBackground,
+    onBackground = TextPrimary,
+    surface = DarkSurface,
+    onSurface = TextPrimary,
+    surfaceVariant = DarkSurfaceElevated,
+    onSurfaceVariant = TextSecondary,
+    surfaceContainer = DarkSurface,
+    surfaceContainerHigh = DarkSurfaceElevated,
+    surfaceContainerHighest = DarkSurfaceHighest,
+
+    outline = BorderDark,
+    outlineVariant = DividerDark,
+
+    inverseSurface = TextPrimary,
+    inverseOnSurface = DarkBackground,
+    inversePrimary = PrimaryBlueVivid
 )
 
-// Light Theme Colors
+// ==================== LIGHT COLOR SCHEME (v2.0 Bold) ====================
+
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF3B82F6),
-    secondary = Color(0xFF22C55E),
-    tertiary = Color(0xFFF59E0B),
-    background = Color(0xFFF8FAFC),
-    surface = Color(0xFFFFFFFF),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1E293B),
-    onSurface = Color(0xFF1E293B),
-    primaryContainer = Color(0xFFDBEAFE),
-    secondaryContainer = Color(0xFFDCFCE7)
+    primary = LightPrimaryBlue,
+    onPrimary = LightTextOnAccent,
+    primaryContainer = LightPrimaryBlueContainer,
+    onPrimaryContainer = LightPrimaryBlue,
+
+    secondary = LightIncomeGreen,
+    onSecondary = LightTextOnAccent,
+    secondaryContainer = LightIncomeGreenContainer,
+    onSecondaryContainer = LightIncomeGreen,
+
+    tertiary = LightExpenseRed,
+    onTertiary = LightTextOnAccent,
+    tertiaryContainer = LightExpenseRedContainer,
+    onTertiaryContainer = LightExpenseRed,
+
+    error = LightExpenseRed,
+    onError = LightTextOnAccent,
+    errorContainer = LightExpenseRedContainer,
+    onErrorContainer = LightExpenseRed,
+
+    background = LightBackground,
+    onBackground = LightTextPrimary,
+    surface = LightSurface,
+    onSurface = LightTextPrimary,
+    surfaceVariant = LightSurfaceElevated,
+    onSurfaceVariant = LightTextSecondary,
+    surfaceContainer = LightSurface,
+    surfaceContainerHigh = LightSurfaceElevated,
+    surfaceContainerHighest = LightSurfaceHighest,
+
+    outline = LightBorder,
+    outlineVariant = LightDivider,
+
+    inverseSurface = LightTextPrimary,
+    inverseOnSurface = LightBackground,
+    inversePrimary = LightPrimaryBlue
 )
+
+// ==================== THEME COMPOSABLE ====================
 
 @Composable
 fun CostKeeperTheme(
-    darkTheme: Boolean,
-    dynamicColor: Boolean = true,
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            if (darkTheme) darkColorScheme() else lightColorScheme()
+            val context = LocalContext.current
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
@@ -58,14 +116,14 @@ fun CostKeeperTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as androidx.activity.ComponentActivity).window
+            val window = (view.context as ComponentActivity).window
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography(),
+        typography = Typography,
         content = content
     )
 }

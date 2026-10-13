@@ -4,17 +4,23 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mody.costkeeper.R
+import com.mody.costkeeper.ui.theme.*
 import com.mody.costkeeper.utils.AppCurrency
 import kotlin.math.min
 
@@ -30,150 +36,131 @@ fun BudgetCard(
     val percentage = if (budget > 0) min((spent / budget * 100).toFloat(), 100f) else 0f
     val remaining = budget - spent
     val isOverBudget = remaining < 0
+    val isWarning = percentage > 80f && !isOverBudget
 
-    // Eye-friendly colors
-    val lightCardColor = Color(0xFFF0F9FF)
-    val darkCardColor = Color(0xFF1E3A5F)
+    // Status color
+    val statusColor = when {
+        isOverBudget -> ExpenseRed
+        isWarning -> WarningAmber
+        else -> IncomeGreen
+    }
 
-    // For warning/over budget - softer orange
-    val warningColor = Color(0xFFE8913E)
-    val warningLight = Color(0xFFF5A623)
+    val backgroundColor = if (isDarkTheme) DarkSurface else LightSurface
+    val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
+    val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
+    val dividerColor = if (isDarkTheme) DividerDark else LightDivider
 
-    // For good status - soft green
-    val goodColor = Color(0xFF3BA373)
-    val goodColorLight = Color(0xFF2E7D64)
-
-    // Get localized strings
     val monthlyBudgetText = stringResource(R.string.monthly_budget)
     val editText = stringResource(R.string.edit)
     val budgetText = stringResource(R.string.budget_label)
     val spentText = stringResource(R.string.spent_label)
     val overBudgetText = stringResource(R.string.over_budget)
     val remainingText = stringResource(R.string.remaining)
-    val warningText = stringResource(R.string.budget_warning)
 
     Card(
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDarkTheme) darkCardColor else lightCardColor
-        ),
-        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
         ) {
+            // Header row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = monthlyBudgetText,
-                    color = if (isDarkTheme) Color.White else Color(0xFF1E3A5F),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    text = monthlyBudgetText.uppercase(),
+                    color = textMuted,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold
                 )
 
-                TextButton(onClick = onEditBudget) {
-                    Text(
-                        text = editText,
-                        color = if (isDarkTheme) Color(0xFF7EB8DA) else Color(0xFF4A90C4)
+                IconButton(
+                    onClick = onEditBudget,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = editText,
+                        tint = PrimaryBlue,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        text = budgetText,
-                        color = if (isDarkTheme) Color(0xFFA8B8C8) else Color(0xFF5A6E8A),
-                        fontSize = 12.sp
-                    )
-                    Text(
-                        text = "${currency.symbol}${"%.2f".format(budget)}",
-                        color = if (isDarkTheme) Color.White else Color(0xFF1E3A5F),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+            // Big spent number
+            Text(
+                text = "${currency.symbol}${"%.2f".format(spent)}",
+                color = textPrimary,
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.ExtraBold
+            )
+            Text(
+                text = "of ${currency.symbol}${"%.2f".format(budget)} ${budgetText.lowercase()}",
+                color = textMuted,
+                style = MaterialTheme.typography.bodyMedium
+            )
 
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = spentText,
-                        color = if (isDarkTheme) Color(0xFFA8B8C8) else Color(0xFF5A6E8A),
-                        fontSize = 12.sp
-                    )
-                    Text(
-                        text = "${currency.symbol}${"%.2f".format(spent)}",
-                        color = if (isOverBudget) {
-                            if (isDarkTheme) warningColor else warningLight
-                        } else {
-                            if (isDarkTheme) goodColor else goodColorLight
-                        },
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Progress Bar
+            // Progress bar - thicker, rounded
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(if (isDarkTheme) Color(0xFF2D3E5F) else Color(0xFFE2E8F0))
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(5.dp))
+                    .background(if (isDarkTheme) DarkSurfaceHighest else LightSurfaceHighest)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(percentage / 100f)
                         .fillMaxHeight()
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(RoundedCornerShape(5.dp))
                         .background(
-                            when {
-                                isOverBudget -> if (isDarkTheme) warningColor else warningLight
-                                percentage > 80f -> if (isDarkTheme) Color(0xFFE8913E) else Color(0xFFF5A623)
-                                else -> if (isDarkTheme) goodColor else goodColorLight
-                            }
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(statusColor, statusColor.copy(alpha = 0.85f))
+                            )
                         )
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Status message
-            Text(
-                text = if (isOverBudget)
-                    "$warningText ${currency.symbol}${"%.2f".format(-remaining)}"
-                else
-                    "💰 ${currency.symbol}${"%.2f".format(remaining)} $remainingText",
-                color = if (isOverBudget) {
-                    if (isDarkTheme) warningColor else warningLight
-                } else {
-                    if (isDarkTheme) Color(0xFFA8B8C8) else Color(0xFF5A6E8A)
-                },
-                fontSize = 12.sp
-            )
-
-            if (percentage > 80f && !isOverBudget) {
-                Spacer(modifier = Modifier.height(4.dp))
+            // Status line
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = "$warningText ${"%.0f".format(percentage)}%",
-                    color = if (isDarkTheme) Color(0xFFE8913E) else Color(0xFFF5A623),
-                    fontSize = 12.sp
+                    text = when {
+                        isOverBudget -> "$overBudgetText ${currency.symbol}${"%.2f".format(-remaining)}"
+                        else -> "${currency.symbol}${"%.2f".format(remaining)} $remainingText"
+                    },
+                    color = if (isOverBudget) ExpenseRed else textMuted,
+                    style = MaterialTheme.typography.bodySmall
+                )
+
+                Text(
+                    text = "${"%.0f".format(percentage)}%",
+                    color = statusColor,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditBudgetDialog(
     currentBudget: Double,
@@ -192,11 +179,14 @@ fun EditBudgetDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = if (isDarkTheme) Color(0xFF1E293B) else Color.White,
+        containerColor = if (isDarkTheme) DarkSurfaceElevated else LightSurfaceElevated,
+        shape = RoundedCornerShape(24.dp),
         title = {
             Text(
                 text = setBudgetText,
-                color = if (isDarkTheme) Color.White else Color(0xFF1E3A5F)
+                color = if (isDarkTheme) TextPrimary else LightTextPrimary,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
             )
         },
         text = {
@@ -212,26 +202,30 @@ fun EditBudgetDialog(
                     leadingIcon = {
                         Text(
                             text = currency.symbol,
-                            color = if (isDarkTheme) Color(0xFF7EB8DA) else Color(0xFF4A90C4)
+                            color = PrimaryBlue,
+                            style = MaterialTheme.typography.titleLarge
                         )
                     },
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal
                     ),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = if (isDarkTheme) Color.White else Color(0xFF1E3A5F),
-                        unfocusedTextColor = if (isDarkTheme) Color.White else Color(0xFF1E3A5F),
-                        focusedBorderColor = Color(0xFF4A90C4),
-                        unfocusedBorderColor = if (isDarkTheme) Color(0xFF334155) else Color(0xFFCBD5E1)
+                        focusedTextColor = if (isDarkTheme) TextPrimary else LightTextPrimary,
+                        unfocusedTextColor = if (isDarkTheme) TextPrimary else LightTextPrimary,
+                        focusedBorderColor = PrimaryBlue,
+                        unfocusedBorderColor = if (isDarkTheme) BorderDark else LightBorder,
+                        cursorColor = PrimaryBlue
                     ),
+                    shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 if (showError) {
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = pleaseEnterValidAmountText,
-                        color = if (isDarkTheme) Color(0xFFE8913E) else Color(0xFFF5A623),
-                        fontSize = 12.sp
+                        color = ExpenseRed,
+                        style = MaterialTheme.typography.bodySmall
                     )
                 }
             }
@@ -247,16 +241,22 @@ fun EditBudgetDialog(
                     onBudgetSet(newBudget)
                     onDismiss()
                 },
-                colors = ButtonDefaults.buttonColors(if (isDarkTheme) Color(0xFF4A90C4) else Color(0xFF4A90C4))
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.height(48.dp)
             ) {
-                Text(setBudgetText, color = Color.White)
+                Text(
+                    text = setBudgetText,
+                    color = TextOnAccent,
+                    fontWeight = FontWeight.Bold
+                )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(
                     text = cancelText,
-                    color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B)
+                    color = if (isDarkTheme) TextSecondary else LightTextSecondary
                 )
             }
         }
