@@ -1,50 +1,52 @@
 package com.mody.costkeeper.ui.screens
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
-import com.mody.costkeeper.ui.components.EditBudgetDialog
 import android.content.Context
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mody.costkeeper.R
 import com.mody.costkeeper.data.local.ExpenseEntity
 import com.mody.costkeeper.ui.components.*
+import com.mody.costkeeper.ui.theme.*
 import com.mody.costkeeper.ui.viewmodel.ExpenseViewModel
 import com.mody.costkeeper.utils.*
 import kotlinx.coroutines.launch
-import kotlin.math.*
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.abs
 
-/* ================= HELPER FUNCTIONS ================= */
+/* ================= STORAGE HELPERS ================= */
 
 fun loadBudget(context: Context): Double {
     val prefs = context.getSharedPreferences("costkeeper_prefs", Context.MODE_PRIVATE)
@@ -58,8 +60,7 @@ fun saveBudget(context: Context, budget: Double) {
 
 fun loadCustomCategories(context: Context): List<String> {
     val prefs = context.getSharedPreferences("costkeeper_prefs", Context.MODE_PRIVATE)
-    val categoriesSet = prefs.getStringSet("custom_categories", emptySet())
-    return categoriesSet?.toList()?.sorted() ?: emptyList()
+    return prefs.getStringSet("custom_categories", emptySet())?.toList()?.sorted() ?: emptyList()
 }
 
 fun saveCustomCategories(context: Context, categories: List<String>) {
@@ -76,15 +77,12 @@ fun ExpenseScreen(
     isDarkTheme: Boolean,
     onThemeChange: (Boolean) -> Unit
 ) {
-
     val expenses by viewModel.expenses.collectAsState(initial = emptyList())
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    // State variables
     var amount by remember { mutableStateOf("") }
     var mode by remember { mutableStateOf("EXPENSE") }
-    var selectedSlice by remember { mutableStateOf<String?>(null) }
     var showSettings by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
@@ -92,29 +90,23 @@ fun ExpenseScreen(
     var selectedDate by remember { mutableStateOf(System.currentTimeMillis()) }
     var showDatePicker by remember { mutableStateOf(false) }
 
-    // Currency
     var selectedCurrency by remember { mutableStateOf(CurrencyManager.getSelectedCurrency(context)) }
     var showCurrencySelector by remember { mutableStateOf(false) }
 
-    // Search, Budget, Categories
     var searchQuery by remember { mutableStateOf("") }
     var showBudgetDialog by remember { mutableStateOf(false) }
     var monthlyBudget by remember { mutableStateOf(loadBudget(context)) }
     var customCategories by remember { mutableStateOf(loadCustomCategories(context)) }
     var showCategoryManager by remember { mutableStateOf(false) }
 
-    // Share Report
     var showShareReportDialog by remember { mutableStateOf(false) }
     var isGeneratingReport by remember { mutableStateOf(false) }
-
-    // PDF Export
     var isGeneratingPDF by remember { mutableStateOf(false) }
 
-    // Language
     val prefs = context.getSharedPreferences("costkeeper_prefs", Context.MODE_PRIVATE)
     var selectedLanguage by remember { mutableStateOf(prefs.getString("app_language", "system") ?: "system") }
 
-    // Get string resources
+    // String resources
     val balanceText = stringResource(R.string.balance)
     val overviewText = stringResource(R.string.overview)
     val noDataText = stringResource(R.string.no_data)
@@ -153,7 +145,6 @@ fun ExpenseScreen(
     val noResultsText = stringResource(R.string.no_results)
     val noExpensesMatchSearchText = stringResource(R.string.no_expenses_match_search)
 
-    // Category names
     val categoryFoodDining = stringResource(R.string.category_food_dining)
     val categoryTransportation = stringResource(R.string.category_transportation)
     val categoryShopping = stringResource(R.string.category_shopping)
@@ -177,7 +168,6 @@ fun ExpenseScreen(
 
     val allExpenseCategories = defaultExpenseCategories + customCategories
 
-    // Initialize selected category based on mode
     LaunchedEffect(mode, incomeCategories, defaultExpenseCategories) {
         selectedCategory = if (mode == "INCOME") {
             incomeCategories.firstOrNull() ?: categorySalary
@@ -186,7 +176,7 @@ fun ExpenseScreen(
         }
     }
 
-    // Calculate current month expenses for budget
+    // Current month expenses for budget
     val calendar = Calendar.getInstance()
     val currentMonth = calendar.get(Calendar.MONTH)
     val currentYear = calendar.get(Calendar.YEAR)
@@ -204,99 +194,132 @@ fun ExpenseScreen(
     val expense = expenses.filter { it.amount < 0 }.sumOf { abs(it.amount) }
     val balance = income - expense
 
-    val chartData = remember(expenses) {
-        expenses
-            .filter { it.amount < 0 }
-            .groupBy { it.category }
-            .mapValues { it.value.sumOf { e -> abs(e.amount) } }
-    }
-
-    val pop by animateFloatAsState(
-        targetValue = if (selectedSlice != null) 1f else 0f,
-        animationSpec = tween(300),
-        label = ""
-    )
-
-    val colors = listOf(
-        Color(0xFF60A5FA),
-        Color(0xFF34D399),
-        Color(0xFFFBBF24),
-        Color(0xFFFB7185),
-        Color(0xFFA78BFA),
-        Color(0xFF22D3EE),
-        Color(0xFFF97316)
-    )
-
-    // Filter expenses based on search query
     val filteredExpenses = if (searchQuery.isEmpty()) expenses
     else expenses.filter {
         it.category.contains(searchQuery, ignoreCase = true) ||
                 it.title.contains(searchQuery, ignoreCase = true)
     }
 
-    // Light theme colors
-    val lightBackground = Color(0xFFF8FAFC)
-    val lightSurface = Color(0xFFFFFFFF)
-    val lightTextPrimary = Color(0xFF1E293B)
-    val lightTextSecondary = Color(0xFF475569)
-    val lightDivider = Color(0xFFE2E8F0)
+    val background = if (isDarkTheme) DarkBackground else LightBackground
+    val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
+    val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
 
     Box(
-        Modifier.fillMaxSize().background(if (isDarkTheme) Color(0xFF0F172A) else lightBackground)
+        Modifier
+            .fillMaxSize()
+            .background(background)
     ) {
-
         LazyColumn(
-            Modifier.fillMaxSize().padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(top = 20.dp, bottom = 24.dp)
         ) {
 
-            // Header
+            // ============ HEADER ============
             item {
                 Row(
                     Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        stringResource(R.string.app_name),
-                        color = if (isDarkTheme) Color.White else lightTextPrimary,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Column {
+                        Text(
+                            text = "CostKeeper",
+                            color = textPrimary,
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Text(
+                            text = "Track your money",
+                            color = textMuted,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
 
-                    IconButton(onClick = { showSettings = true }) {
+                    IconButton(
+                        onClick = { showSettings = true },
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(if (isDarkTheme) DarkSurface else LightSurface)
+                    ) {
                         Icon(
                             Icons.Default.Settings,
-                            null,
-                            tint = if (isDarkTheme) Color.White else lightTextPrimary
+                            contentDescription = settingsText,
+                            tint = PrimaryBlue
                         )
                     }
                 }
             }
 
-            // Balance Card
+            // ============ BALANCE CARD ============
             item {
                 Card(
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isDarkTheme) Color(0xFF2C4A6E) else Color(0xFF4A90C4)
+                        containerColor = PrimaryBlue
                     ),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
-                        Modifier.fillMaxWidth().padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp)
                     ) {
-                        Text(balanceText, color = Color(0xFFD4E4F5), fontSize = 14.sp)
+                        Text(
+                            text = balanceText.uppercase(),
+                            color = Color.White.copy(alpha = 0.75f),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(Modifier.height(8.dp))
                         Text(
                             text = "${selectedCurrency.symbol}${"%.2f".format(balance)}",
                             color = Color.White,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.displayMedium,
+                            fontWeight = FontWeight.ExtraBold
                         )
+                        Spacer(Modifier.height(16.dp))
+
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(24.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Income",
+                                    color = Color.White.copy(alpha = 0.7f),
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                                Text(
+                                    text = "${selectedCurrency.symbol}${"%.2f".format(income)}",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = "Expense",
+                                    color = Color.White.copy(alpha = 0.7f),
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                                Text(
+                                    text = "${selectedCurrency.symbol}${"%.2f".format(expense)}",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                     }
                 }
             }
 
-            // Budget Card
+            // ============ BUDGET CARD ============
             item {
                 BudgetCard(
                     budget = monthlyBudget,
@@ -307,67 +330,7 @@ fun ExpenseScreen(
                 )
             }
 
-            // Overview Card
-            item {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isDarkTheme) Color(0xFF1E293B) else lightSurface
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = if (isDarkTheme) 0.dp else 1.dp)
-                ) {
-                    Column(
-                        Modifier.fillMaxWidth().padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            overviewText,
-                            color = if (isDarkTheme) Color.White else lightTextPrimary,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Spacer(Modifier.height(10.dp))
-
-                        if (chartData.isEmpty()) {
-                            EmptyState(
-                                title = noDataText,
-                                message = stringResource(R.string.add_first_expense),
-                                isDarkTheme = isDarkTheme
-                            )
-                        } else {
-                            PieChart(
-                                data = chartData,
-                                selected = selectedSlice,
-                                onSelect = { selectedSlice = it },
-                                colors = colors,
-                                pop = pop,
-                                isDarkTheme = isDarkTheme,
-                                currency = selectedCurrency
-                            )
-                            Spacer(Modifier.height(12.dp))
-                            Legend(
-                                data = chartData,
-                                colors = colors,
-                                selected = selectedSlice,
-                                onSelect = { selectedSlice = it },
-                                isDarkTheme = isDarkTheme,
-                                currency = selectedCurrency
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Search Bar
-            item {
-                SearchBar(
-                    query = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    isDarkTheme = isDarkTheme
-                )
-            }
-
-            // Toggle Mode
+            // ============ MODE TOGGLE ============
             item {
                 ToggleMode(
                     mode = mode,
@@ -378,137 +341,70 @@ fun ExpenseScreen(
                 )
             }
 
-            // Add Expense Form
+            // ============ ADD FORM ============
             item {
-                var expanded by remember { mutableStateOf(false) }
-
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isDarkTheme) Color(0xFF1E293B) else lightSurface
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = if (isDarkTheme) 0.dp else 1.dp)
-                ) {
-                    Column(Modifier.padding(16.dp)) {
-                        OutlinedTextField(
-                            value = amount,
-                            onValueChange = { newValue ->
-                                if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
-                                    amount = newValue
-                                    showError = false
-                                }
-                            },
-                            label = { Text(amountText) },
-                            isError = showError,
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                            ),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = if (isDarkTheme) Color.White else lightTextPrimary,
-                                unfocusedTextColor = if (isDarkTheme) Color.White else lightTextPrimary,
-                                focusedLabelColor = if (isDarkTheme) Color.White else Color(0xFF3B82F6),
-                                unfocusedLabelColor = if (isDarkTheme) Color(0xFFCBD5E1) else lightTextSecondary,
-                                focusedBorderColor = if (showError) Color(0xFFF87171) else Color(0xFF3B82F6),
-                                unfocusedBorderColor = if (showError) Color(0xFFF87171) else if (isDarkTheme) Color(0xFF334155) else lightDivider,
-                                errorBorderColor = Color(0xFFF87171)
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        if (showError) {
-                            Text(
-                                text = pleaseEnterValidAmount,
-                                color = Color(0xFFF87171),
-                                fontSize = 12.sp,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
+                AddExpenseForm(
+                    amount = amount,
+                    onAmountChange = { newValue ->
+                        if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
+                            amount = newValue
+                            showError = false
                         }
-
-                        Spacer(Modifier.height(10.dp))
-
-                        DateSelectorButton(
-                            selectedDate = selectedDate,
-                            onClick = { showDatePicker = true },
-                            isDarkTheme = isDarkTheme
-                        )
-
-                        Spacer(Modifier.height(10.dp))
-
-                        val list = if (mode == "INCOME") incomeCategories else allExpenseCategories
-
-                        ExposedDropdownMenuBox(
-                            expanded = expanded,
-                            onExpandedChange = { expanded = it }
-                        ) {
-                            OutlinedTextField(
-                                value = selectedCategory,
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text(categoryText) },
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = if (isDarkTheme) Color.White else lightTextPrimary,
-                                    unfocusedTextColor = if (isDarkTheme) Color.White else lightTextPrimary,
-                                    focusedLabelColor = if (isDarkTheme) Color.White else Color(0xFF3B82F6),
-                                    unfocusedLabelColor = if (isDarkTheme) Color(0xFFCBD5E1) else lightTextSecondary,
-                                    focusedBorderColor = Color(0xFF3B82F6),
-                                    unfocusedBorderColor = if (isDarkTheme) Color(0xFF334155) else lightDivider
-                                ),
-                                modifier = Modifier.fillMaxWidth().menuAnchor()
-                            )
-
-                            ExposedDropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false },
-                                modifier = Modifier.background(if (isDarkTheme) Color(0xFF1E293B) else lightSurface)
-                            ) {
-                                list.forEach { categoryItem ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                categoryItem,
-                                                color = if (isDarkTheme) Color.White else lightTextPrimary
-                                            )
-                                        },
-                                        onClick = {
-                                            selectedCategory = categoryItem
-                                            expanded = false
-                                        }
-                                    )
-                                }
-                            }
+                    },
+                    showError = showError,
+                    selectedDate = selectedDate,
+                    onDateClick = { showDatePicker = true },
+                    selectedCategory = selectedCategory,
+                    onCategorySelected = { selectedCategory = it },
+                    categories = if (mode == "INCOME") incomeCategories else allExpenseCategories,
+                    mode = mode,
+                    onSave = {
+                        if (amount.isBlank()) {
+                            showError = true
+                            return@AddExpenseForm
                         }
-
-                        Spacer(Modifier.height(16.dp))
-
-                        Button(
-                            onClick = {
-                                if (amount.isBlank()) {
-                                    showError = true
-                                    return@Button
-                                }
-                                val v = amount.toDoubleOrNull()
-                                if (v == null || v <= 0.0) {
-                                    showError = true
-                                    return@Button
-                                }
-                                showError = false
-                                val final = if (mode == "EXPENSE") -v else v
-                                val titleText = if (mode == "EXPENSE") expenseText else incomeText
-                                viewModel.addExpenseWithDate(titleText, final, selectedCategory, selectedDate)
-                                amount = ""
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF3B82F6)
-                            )
-                        ) {
-                            Text(saveText, color = Color.White, fontWeight = FontWeight.Bold)
+                        val v = amount.toDoubleOrNull()
+                        if (v == null || v <= 0.0) {
+                            showError = true
+                            return@AddExpenseForm
                         }
-                    }
-                }
+                        showError = false
+                        val final = if (mode == "EXPENSE") -v else v
+                        val titleText = if (mode == "EXPENSE") expenseText else incomeText
+                        viewModel.addExpenseWithDate(titleText, final, selectedCategory, selectedDate)
+                        amount = ""
+                    },
+                    isDarkTheme = isDarkTheme,
+                    currency = selectedCurrency,
+                    amountText = amountText,
+                    categoryText = categoryText,
+                    saveText = saveText,
+                    errorText = pleaseEnterValidAmount
+                )
             }
 
-            // Expense List
+            // ============ SEARCH ============
+            item {
+                SearchBar(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    isDarkTheme = isDarkTheme
+                )
+            }
+
+            // ============ LIST HEADER ============
+            item {
+                Text(
+                    text = "TRANSACTIONS".uppercase(),
+                    color = textMuted,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.sp,
+                    modifier = Modifier.padding(top = 8.dp, start = 4.dp)
+                )
+            }
+
+            // ============ EXPENSE LIST ============
             if (filteredExpenses.isEmpty() && searchQuery.isNotEmpty()) {
                 item {
                     EmptyState(
@@ -523,8 +419,8 @@ fun ExpenseScreen(
                 }
             } else {
                 items(filteredExpenses) { expenseItem ->
-                    ExpenseItem(
-                        exp = expenseItem,
+                    ExpenseItemRow(
+                        expense = expenseItem,
                         onDelete = { viewModel.deleteExpense(expenseItem) },
                         onEdit = { selectedExpense = expenseItem },
                         isDarkTheme = isDarkTheme,
@@ -533,16 +429,16 @@ fun ExpenseScreen(
                 }
             }
 
-            // Banner Ad
+            // ============ BANNER AD ============
             item {
                 YandexBannerAd(
-                    modifier = Modifier.padding(8.dp),
+                    modifier = Modifier.padding(top = 8.dp),
                     adUnitId = "R-M-19253258-1"
                 )
             }
         }
 
-        // Settings Dialog
+        // ============ SETTINGS DIALOG ============
         if (showSettings) {
             SettingsDialog(
                 viewModel = viewModel,
@@ -561,7 +457,6 @@ fun ExpenseScreen(
                 onExportToPDF = {
                     scope.launch {
                         isGeneratingPDF = true
-
                         val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
                         val endDate = Date()
                         val startDate = Date(System.currentTimeMillis() - 90L * 24 * 60 * 60 * 1000)
@@ -640,7 +535,7 @@ fun ExpenseScreen(
         }
     }
 
-    // Date Picker Dialog
+    // ============ DATE PICKER ============
     if (showDatePicker) {
         CustomDatePickerDialog(
             initialDate = selectedDate,
@@ -650,7 +545,7 @@ fun ExpenseScreen(
         )
     }
 
-    // Edit Expense Dialog
+    // ============ EDIT DIALOG ============
     selectedExpense?.let { expense ->
         EditExpenseDialog(
             expense = expense,
@@ -661,7 +556,7 @@ fun ExpenseScreen(
         )
     }
 
-    // Budget Dialog
+    // ============ BUDGET DIALOG ============
     if (showBudgetDialog) {
         EditBudgetDialog(
             currentBudget = monthlyBudget,
@@ -675,7 +570,7 @@ fun ExpenseScreen(
         )
     }
 
-    // Category Manager Dialog
+    // ============ CATEGORY MANAGER ============
     if (showCategoryManager) {
         CategoryManagerDialog(
             customCategories = customCategories,
@@ -692,7 +587,7 @@ fun ExpenseScreen(
         )
     }
 
-    // Currency Selector Dialog
+    // ============ CURRENCY SELECTOR ============
     if (showCurrencySelector) {
         CurrencySelectorDialog(
             currentCurrency = selectedCurrency,
@@ -705,7 +600,7 @@ fun ExpenseScreen(
         )
     }
 
-    // Share Report Dialog
+    // ============ SHARE REPORT ============
     if (showShareReportDialog) {
         ShareReportDialog(
             onShare = {
@@ -716,6 +611,11 @@ fun ExpenseScreen(
                     val endDate = Date()
                     val startDate = Date(System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000)
                     val dateRange = "${dateFormat.format(startDate)} - ${dateFormat.format(endDate)}"
+
+                    val chartData = expenses
+                        .filter { it.amount < 0 }
+                        .groupBy { it.category }
+                        .mapValues { it.value.sumOf { e -> abs(e.amount) } }
 
                     val topCategories = chartData.entries
                         .sortedByDescending { it.value }
@@ -750,133 +650,270 @@ fun ExpenseScreen(
     }
 }
 
-/* ================= PIE CHART ================= */
+/* ================= ADD EXPENSE FORM ================= */
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PieChart(
-    data: Map<String, Double>,
-    selected: String?,
-    onSelect: (String?) -> Unit,
-    colors: List<Color>,
-    pop: Float,
+private fun AddExpenseForm(
+    amount: String,
+    onAmountChange: (String) -> Unit,
+    showError: Boolean,
+    selectedDate: Long,
+    onDateClick: () -> Unit,
+    selectedCategory: String,
+    onCategorySelected: (String) -> Unit,
+    categories: List<String>,
+    mode: String,
+    onSave: () -> Unit,
     isDarkTheme: Boolean,
-    currency: AppCurrency
+    currency: AppCurrency,
+    amountText: String,
+    categoryText: String,
+    saveText: String,
+    errorText: String
 ) {
-    val total = data.values.sum().coerceAtLeast(1.0)
-    val slices = remember(data) {
-        var start = -90f
-        data.map {
-            val sweep = (it.value / total * 360f).toFloat()
-            Triple(it.key, start, sweep).also { start += sweep }
-        }
-    }
+    var expanded by remember { mutableStateOf(false) }
 
-    Box(Modifier.size(220.dp), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.fillMaxSize()) {
-            val r = size.minDimension / 2f
-            val c = Offset(size.width / 2, size.height / 2)
+    val cardBg = if (isDarkTheme) DarkSurface else LightSurface
+    val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
+    val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
+    val inputBorder = if (isDarkTheme) BorderDark else LightBorder
 
-            slices.forEachIndexed { i, (cat, start, sweep) ->
-                val mid = Math.toRadians((start + sweep / 2).toDouble())
-                val isSel = cat == selected
-                val offset = if (isSel) 20f * pop else 0f
-
-                drawArc(
-                    color = colors[i % colors.size],
-                    startAngle = start,
-                    sweepAngle = sweep,
-                    useCenter = true,
-                    topLeft = Offset(
-                        c.x - r + cos(mid).toFloat() * offset,
-                        c.y - r + sin(mid).toFloat() * offset
-                    ),
-                    size = Size(r * 2, r * 2),
-                    alpha = if (selected == null || isSel) 1f else 0.4f
-                )
-            }
-            drawCircle(
-                color = if (isDarkTheme) Color(0xFF0F172A) else Color(0xFFF8FAFC),
-                radius = r * 0.45f
+    Card(
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
+            Text(
+                text = amountText.uppercase(),
+                color = textMuted,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold
             )
-        }
-    }
-}
 
-/* ================= LEGEND ================= */
+            Spacer(Modifier.height(10.dp))
 
-@Composable
-fun Legend(
-    data: Map<String, Double>,
-    colors: List<Color>,
-    selected: String?,
-    onSelect: (String?) -> Unit,
-    isDarkTheme: Boolean,
-    currency: AppCurrency
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        data.entries.forEachIndexed { i, entry ->
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .clickable { onSelect(entry.key) }
-                    .padding(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(Modifier.size(10.dp).background(colors[i % colors.size], CircleShape))
-                Spacer(Modifier.width(10.dp))
+            OutlinedTextField(
+                value = amount,
+                onValueChange = onAmountChange,
+                placeholder = {
+                    Text(
+                        "0.00",
+                        color = textMuted,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
+                leadingIcon = {
+                    Text(
+                        text = currency.symbol,
+                        color = PrimaryBlue,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                isError = showError,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = textPrimary,
+                    unfocusedTextColor = textPrimary,
+                    focusedBorderColor = PrimaryBlue,
+                    unfocusedBorderColor = inputBorder,
+                    cursorColor = PrimaryBlue
+                ),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (showError) {
+                Spacer(Modifier.height(6.dp))
                 Text(
-                    entry.key,
-                    color = if (isDarkTheme) Color.White else Color(0xFF1E293B),
-                    modifier = Modifier.weight(1f)
+                    text = errorText,
+                    color = ExpenseRed,
+                    style = MaterialTheme.typography.bodySmall
                 )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            DateSelectorButton(
+                selectedDate = selectedDate,
+                onClick = onDateClick,
+                isDarkTheme = isDarkTheme
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = it }
+            ) {
+                OutlinedTextField(
+                    value = selectedCategory,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(categoryText) },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = textPrimary,
+                        unfocusedTextColor = textPrimary,
+                        focusedBorderColor = PrimaryBlue,
+                        unfocusedBorderColor = inputBorder,
+                        focusedLabelColor = PrimaryBlue,
+                        unfocusedLabelColor = textMuted
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.background(cardBg)
+                ) {
+                    categories.forEach { cat ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(cat, color = textPrimary)
+                            },
+                            onClick = {
+                                onCategorySelected(cat)
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Button(
+                onClick = onSave,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (mode == "INCOME") IncomeGreen else PrimaryBlue
+                ),
+                shape = RoundedCornerShape(14.dp)
+            ) {
                 Text(
-                    text = "${currency.symbol}${"%.1f".format(entry.value)}",
-                    color = if (isDarkTheme) Color(0xFFCBD5E1) else Color(0xFF475569)
+                    text = saveText,
+                    color = TextOnAccent,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
     }
 }
 
-/* ================= EXPENSE ITEM ================= */
+/* ================= EXPENSE ITEM ROW ================= */
 
 @Composable
-fun ExpenseItem(
-    exp: ExpenseEntity,
+fun ExpenseItemRow(
+    expense: ExpenseEntity,
     onDelete: () -> Unit,
     onEdit: () -> Unit,
     isDarkTheme: Boolean,
     currency: AppCurrency
 ) {
+    val isIncome = expense.amount > 0
+
+    val cardBg = if (isDarkTheme) DarkSurface else LightSurface
+    val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
+    val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
+
+    val categoryEmoji = when {
+        expense.category.contains("Food", true) -> "🍔"
+        expense.category.contains("Transport", true) -> "🚗"
+        expense.category.contains("Shopping", true) -> "🛍️"
+        expense.category.contains("Entertainment", true) -> "🎬"
+        expense.category.contains("Bills", true) -> "💡"
+        expense.category.contains("Health", true) -> "💊"
+        expense.category.contains("Education", true) -> "📚"
+        expense.category.contains("Rent", true) -> "🏠"
+        expense.category.contains("Travel", true) -> "✈️"
+        expense.category.contains("Salary", true) -> "💼"
+        else -> "💵"
+    }
+
     Card(
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDarkTheme) Color(0xFF1E293B) else Color.White
-        ),
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.clickable { onEdit() }
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onEdit() }
     ) {
         Row(
-            Modifier.padding(16.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Category icon
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        if (isIncome) IncomeGreen.copy(alpha = 0.15f)
+                        else ExpenseRed.copy(alpha = 0.15f)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(categoryEmoji, fontSize = 22.sp)
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            // Category + date
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = expense.category,
+                    color = textPrimary,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
+                )
+                Text(
+                    text = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(expense.date)),
+                    color = textMuted,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+
+            // Amount
             Text(
-                exp.category,
-                modifier = Modifier.weight(1f),
-                color = if (isDarkTheme) Color.White else Color(0xFF1E293B),
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                text = "${currency.symbol}${"%.2f".format(abs(exp.amount))}",
-                color = if (exp.amount >= 0) Color(0xFF4ADE80) else Color(0xFFF87171),
+                text = "${if (isIncome) "+" else "-"}${currency.symbol}${"%.2f".format(abs(expense.amount))}",
+                color = if (isIncome) IncomeGreen else ExpenseRed,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
+
             Spacer(Modifier.width(8.dp))
-            IconButton(onClick = onDelete) {
+
+            // Delete
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.size(32.dp)
+            ) {
                 Icon(
                     Icons.Default.Delete,
-                    null,
-                    tint = Color(0xFF94A3B8),
-                    modifier = Modifier.size(20.dp)
+                    contentDescription = "Delete",
+                    tint = textMuted,
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
@@ -893,45 +930,87 @@ fun ToggleMode(
     expenseText: String,
     incomeText: String
 ) {
+    val containerBg = if (isDarkTheme) DarkSurfaceHighest else LightSurfaceHighest
+
     Row(
         Modifier
             .fillMaxWidth()
-            .background(
-                if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9),
-                RoundedCornerShape(14.dp)
-            )
+            .clip(RoundedCornerShape(999.dp))
+            .background(containerBg)
             .padding(4.dp)
     ) {
         Box(
-            Modifier.weight(1f).clickable { onChange("EXPENSE") }
-                .background(
-                    if (mode == "EXPENSE") Color(0xFF3B82F6) else Color.Transparent,
-                    RoundedCornerShape(10.dp)
-                )
+            Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(999.dp))
+                .background(if (mode == "EXPENSE") ExpenseRed else Color.Transparent)
+                .clickable { onChange("EXPENSE") }
                 .padding(12.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 expenseText,
-                color = if (mode == "EXPENSE") Color.White else if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
+                color = if (mode == "EXPENSE") Color.White else if (isDarkTheme) TextMuted else LightTextMuted,
+                style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold
             )
         }
         Box(
-            Modifier.weight(1f).clickable { onChange("INCOME") }
-                .background(
-                    if (mode == "INCOME") Color(0xFF22C55E) else Color.Transparent,
-                    RoundedCornerShape(10.dp)
-                )
+            Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(999.dp))
+                .background(if (mode == "INCOME") IncomeGreen else Color.Transparent)
+                .clickable { onChange("INCOME") }
                 .padding(12.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 incomeText,
-                color = if (mode == "INCOME") Color.White else if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
+                color = if (mode == "INCOME") Color.White else if (isDarkTheme) TextMuted else LightTextMuted,
+                style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold
             )
         }
+    }
+}
+
+/* ================= EMPTY STATE ================= */
+
+@Composable
+fun ExpensesEmptyState(isDarkTheme: Boolean) {
+    val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
+    val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(88.dp)
+                .clip(CircleShape)
+                .background(PrimaryBlueContainer.copy(alpha = 0.4f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("💰", fontSize = 44.sp)
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            text = "No transactions yet",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = textPrimary
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Add your first expense above",
+            style = MaterialTheme.typography.bodyMedium,
+            color = textMuted,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -987,35 +1066,32 @@ fun SettingsDialog(
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var isExporting by remember { mutableStateOf(false) }
 
+    val surfaceBg = if (isDarkTheme) DarkSurfaceElevated else LightSurfaceElevated
+    val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
+    val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = if (isDarkTheme) Color(0xFF1E293B) else Color.White,
-        titleContentColor = if (isDarkTheme) Color.White else Color(0xFF1E293B),
-        textContentColor = if (isDarkTheme) Color.White else Color(0xFF1E293B),
-        icon = {
-            Icon(
-                Icons.Default.Settings,
-                null,
-                tint = if (isDarkTheme) Color(0xFF60A5FA) else Color(0xFF3B82F6)
+        containerColor = surfaceBg,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Text(
+                text = settingsText,
+                color = textPrimary,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
             )
         },
-        title = { Text(settingsText, fontWeight = FontWeight.Bold) },
         text = {
-            androidx.compose.foundation.layout.Column(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(max = 500.dp)
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Theme Section
-                Text(
-                    themeText,
-                    color = if (isDarkTheme) Color(0xFF60A5FA) else Color(0xFF3B82F6),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
-
+                // Theme
+                SectionLabel(themeText, isDarkTheme)
                 ThemeToggle(
                     isDarkTheme = isDarkTheme,
                     onThemeChange = onThemeChange,
@@ -1023,108 +1099,60 @@ fun SettingsDialog(
                     darkText = darkText
                 )
 
-                HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
+                HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
 
-                // Language Section
-                Text(
-                    languageText,
-                    color = if (isDarkTheme) Color(0xFF60A5FA) else Color(0xFF3B82F6),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                // Language
+                SectionLabel(languageText, isDarkTheme)
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    LanguageOption(
-                        name = "English",
-                        isSelected = selectedLanguage == "en",
-                        onClick = { onLanguageChange("en") },
-                        isDarkTheme = isDarkTheme,
-                        modifier = Modifier.weight(1f)
-                    )
-                    LanguageOption(
-                        name = "Русский",
-                        isSelected = selectedLanguage == "ru",
-                        onClick = { onLanguageChange("ru") },
-                        isDarkTheme = isDarkTheme,
-                        modifier = Modifier.weight(1f)
-                    )
-                    LanguageOption(
-                        name = "中文",
-                        isSelected = selectedLanguage == "zh",
-                        onClick = { onLanguageChange("zh") },
-                        isDarkTheme = isDarkTheme,
-                        modifier = Modifier.weight(1f)
-                    )
+                    LanguageOption("English", selectedLanguage == "en", { onLanguageChange("en") }, isDarkTheme, Modifier.weight(1f))
+                    LanguageOption("Русский", selectedLanguage == "ru", { onLanguageChange("ru") }, isDarkTheme, Modifier.weight(1f))
+                    LanguageOption("中文", selectedLanguage == "zh", { onLanguageChange("zh") }, isDarkTheme, Modifier.weight(1f))
                 }
 
-                Text(
-                    text = if (selectedLanguage == "system") systemDefaultText else customSelectedText,
-                    color = if (isDarkTheme) Color(0xFF64748B) else Color(0xFF94A3B8),
-                    fontSize = 10.sp,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
+                HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
 
-                HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
-
-                // Currency Section
-                Text(
-                    currencyText,
-                    color = if (isDarkTheme) Color(0xFF60A5FA) else Color(0xFF3B82F6),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                // Currency
+                SectionLabel(currencyText, isDarkTheme)
 
                 OutlinedButton(
                     onClick = onShowCurrencySelector,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, if (isDarkTheme) BorderDark else LightBorder)
                 ) {
                     Text("${selectedCurrency.flag} ", fontSize = 16.sp)
                     Spacer(Modifier.width(4.dp))
-                    Text("${selectedCurrency.symbol} ${selectedCurrency.code}", fontWeight = FontWeight.Medium)
-                    Spacer(Modifier.width(8.dp))
-                    Text("▼", fontSize = 12.sp, color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B))
-                }
-
-                HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
-
-                // Categories Section
-                Text(
-                    categoriesText,
-                    color = if (isDarkTheme) Color(0xFF60A5FA) else Color(0xFF3B82F6),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
-
-                OutlinedButton(
-                    onClick = onShowCategoryManager,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Edit, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Manage Custom Categories")
-                }
-
-                if (customCategories.isNotEmpty()) {
                     Text(
-                        "${customCategories.size} custom ${if (customCategories.size == 1) "category" else "categories"} added",
-                        color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                        fontSize = 11.sp,
-                        modifier = Modifier.padding(start = 8.dp)
+                        "${selectedCurrency.symbol} ${selectedCurrency.code}",
+                        color = textPrimary,
+                        fontWeight = FontWeight.Medium
                     )
                 }
 
-                HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
+                HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
 
-                // Data Section
-                Text(
-                    dataSectionText,
-                    color = if (isDarkTheme) Color(0xFF60A5FA) else Color(0xFF3B82F6),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                // Categories
+                SectionLabel(categoriesText, isDarkTheme)
+
+                OutlinedButton(
+                    onClick = onShowCategoryManager,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, if (isDarkTheme) BorderDark else LightBorder)
+                ) {
+                    Icon(Icons.Default.Edit, null, tint = PrimaryBlue)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Manage Categories", color = textPrimary)
+                }
+
+                HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
+
+                // Data
+                SectionLabel(dataSectionText, isDarkTheme)
 
                 OutlinedButton(
                     onClick = {
@@ -1138,68 +1166,58 @@ fun SettingsDialog(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !isExporting
+                    enabled = !isExporting,
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, if (isDarkTheme) BorderDark else LightBorder)
                 ) {
-                    if (isExporting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = Color(0xFF60A5FA),
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(exportingText)
-                    } else {
-                        Icon(Icons.Default.Share, null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(exportCsvText)
-                    }
+                    Icon(Icons.Default.Share, null, tint = PrimaryBlue)
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (isExporting) exportingText else exportCsvText, color = textPrimary)
                 }
 
-                // Share Report as Image button
                 OutlinedButton(
                     onClick = onShowShareReport,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, if (isDarkTheme) BorderDark else LightBorder)
                 ) {
-                    Icon(Icons.Default.Image, null)
+                    Icon(Icons.Default.Image, null, tint = PrimaryBlue)
                     Spacer(Modifier.width(8.dp))
-                    Text(shareReportText)
+                    Text(shareReportText, color = textPrimary)
                 }
 
-                // Export to PDF button
                 OutlinedButton(
                     onClick = onExportToPDF,
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !isGeneratingPDF
+                    enabled = !isGeneratingPDF,
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, if (isDarkTheme) BorderDark else LightBorder)
                 ) {
                     if (isGeneratingPDF) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = Color(0xFF60A5FA),
+                            modifier = Modifier.size(18.dp),
+                            color = PrimaryBlue,
                             strokeWidth = 2.dp
                         )
                         Spacer(Modifier.width(8.dp))
-                        Text(generatingPdfText)
+                        Text(generatingPdfText, color = textPrimary)
                     } else {
-                        Icon(Icons.Default.Description, null)
+                        Icon(Icons.Default.Description, null, tint = PrimaryBlue)
                         Spacer(Modifier.width(8.dp))
-                        Text(exportToPdfText)
+                        Text(exportToPdfText, color = textPrimary)
                     }
                 }
 
-                HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
+                HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
 
-                // Danger Zone
-                Text(
-                    dangerZoneText,
-                    color = Color(0xFFF87171),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                // Danger zone
+                SectionLabel(dangerZoneText, isDarkTheme, ExpenseRed)
 
                 OutlinedButton(
                     onClick = { showDeleteConfirmation = true },
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFF87171)),
-                    border = BorderStroke(1.dp, Color(0xFFF87171).copy(alpha = 0.5f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ExpenseRed),
+                    border = BorderStroke(1.dp, ExpenseRed.copy(alpha = 0.5f)),
+                    shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(Icons.Default.Delete, null, modifier = Modifier.size(18.dp))
@@ -1207,44 +1225,50 @@ fun SettingsDialog(
                     Text(deleteAllDataText)
                 }
 
-                HorizontalDivider(color = if (isDarkTheme) Color(0xFF334155) else Color(0xFFE2E8F0))
+                HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
 
-                // About Section
-                Text(
-                    aboutText,
-                    color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                // About
+                SectionLabel(aboutText, isDarkTheme)
 
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("CostKeeper", color = if (isDarkTheme) Color.White else Color(0xFF1E293B), fontWeight = FontWeight.Bold)
-                    Text(versionText, color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B), fontSize = 13.sp)
+                Column {
                     Text(
-                        taglineText,
-                        color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                        fontSize = 13.sp
+                        "CostKeeper",
+                        color = textPrimary,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
+                    Text(versionText, color = textMuted, style = MaterialTheme.typography.bodySmall)
+                    Text(taglineText, color = textMuted, style = MaterialTheme.typography.bodySmall)
                 }
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(closeText, color = if (isDarkTheme) Color(0xFF60A5FA) else Color(0xFF3B82F6))
+                Text(
+                    text = closeText,
+                    color = PrimaryBlue,
+                    fontWeight = FontWeight.Bold
+                )
             }
-        },
-        dismissButton = null
+        }
     )
 
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
-            containerColor = if (isDarkTheme) Color(0xFF1E293B) else Color.White,
-            titleContentColor = if (isDarkTheme) Color.White else Color(0xFF1E293B),
-            textContentColor = if (isDarkTheme) Color(0xFFCBD5E1) else Color(0xFF64748B),
-            icon = { Icon(Icons.Default.Warning, null, tint = Color(0xFFF87171)) },
-            title = { Text(deleteConfirmationTitleText, fontWeight = FontWeight.Bold) },
-            text = { Text(deleteConfirmationMessageText) },
+            containerColor = surfaceBg,
+            shape = RoundedCornerShape(24.dp),
+            icon = { Icon(Icons.Default.Warning, null, tint = ExpenseRed) },
+            title = {
+                Text(
+                    deleteConfirmationTitleText,
+                    color = textPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(deleteConfirmationMessageText, color = textMuted)
+            },
             confirmButton = {
                 Button(
                     onClick = {
@@ -1252,21 +1276,30 @@ fun SettingsDialog(
                         showDeleteConfirmation = false
                         onDismiss()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+                    colors = ButtonDefaults.buttonColors(containerColor = ExpenseRed),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(deleteEverythingText)
+                    Text(deleteEverythingText, color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmation = false }) {
-                    Text(cancelText, color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B))
+                    Text(cancelText, color = textMuted)
                 }
             }
         )
     }
 }
 
-/* ================= LANGUAGE OPTION ================= */
+@Composable
+private fun SectionLabel(text: String, isDarkTheme: Boolean, color: Color? = null) {
+    Text(
+        text = text.uppercase(),
+        color = color ?: if (isDarkTheme) TextMuted else LightTextMuted,
+        style = MaterialTheme.typography.labelSmall,
+        fontWeight = FontWeight.SemiBold
+    )
+}
 
 @Composable
 fun LanguageOption(
@@ -1278,129 +1311,16 @@ fun LanguageOption(
 ) {
     Surface(
         modifier = modifier.clickable { onClick() },
-        shape = RoundedCornerShape(8.dp),
-        color = if (isSelected) {
-            Color(0xFF3B82F6)
-        } else {
-            if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFF1F5F9)
-        }
+        shape = RoundedCornerShape(12.dp),
+        color = if (isSelected) PrimaryBlue else if (isDarkTheme) DarkSurfaceHighest else LightSurfaceHighest
     ) {
         Text(
             text = name,
-            color = if (isSelected) Color.White else if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-            modifier = Modifier.padding(8.dp),
+            color = if (isSelected) TextOnAccent else if (isDarkTheme) TextMuted else LightTextMuted,
+            modifier = Modifier.padding(10.dp),
             textAlign = TextAlign.Center,
-            fontSize = 12.sp
-        )
-    }
-}
-
-/* ================= THEME TOGGLE ================= */
-
-@Composable
-fun ThemeToggle(
-    isDarkTheme: Boolean,
-    onThemeChange: (Boolean) -> Unit,
-    lightText: String = "Light",
-    darkText: String = "Dark"
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                color = if (isDarkTheme) Color(0xFF1E293B) else Color(0xFFE2E8F0),
-                shape = RoundedCornerShape(14.dp)
-            )
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        ThemeOption(
-            title = lightText,
-            icon = Icons.Default.LightMode,
-            isSelected = !isDarkTheme,
-            onClick = { onThemeChange(false) },
-            isDarkTheme = isDarkTheme,
-            modifier = Modifier.weight(1f)
-        )
-
-        ThemeOption(
-            title = darkText,
-            icon = Icons.Default.DarkMode,
-            isSelected = isDarkTheme,
-            onClick = { onThemeChange(true) },
-            isDarkTheme = isDarkTheme,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-fun ThemeOption(
-    title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    isDarkTheme: Boolean,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier.clickable { onClick() },
-        shape = RoundedCornerShape(10.dp),
-        color = if (isSelected) {
-            Color(0xFF3B82F6)
-        } else {
-            Color.Transparent
-        }
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-        ) {
-            Icon(
-                icon,
-                contentDescription = title,
-                tint = if (isSelected) Color.White else if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = title,
-                color = if (isSelected) Color.White else if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-                fontSize = 13.sp
-            )
-        }
-    }
-}
-
-/* ================= EXPENSES EMPTY STATE ================= */
-
-@Composable
-fun ExpensesEmptyState(isDarkTheme: Boolean) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "💰",
-            fontSize = 48.sp
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = stringResource(R.string.no_expenses_yet),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (isDarkTheme) Color.White else Color(0xFF1E293B)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = stringResource(R.string.add_first_expense),
-            fontSize = 14.sp,
-            color = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B),
-            textAlign = TextAlign.Center
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Medium
         )
     }
 }
