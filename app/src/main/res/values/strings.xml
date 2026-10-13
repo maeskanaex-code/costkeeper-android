@@ -94,4 +94,11 @@
     <string name="budget_warning">⚠️ Warning: You\'ve used</string>
     <string name="set_budget">Set Monthly Budget</string>
     <string name="budget_amount">Budget Amount</string>
+
+    <!-- Security -->
+    <string name="security_section">SECURITY</string>
+    <string name="lock_enabled">Lock app with PIN</string>
+    <string name="biometric_enabled">Unlock with biometric</string>
+    <string name="auto_lock_label">Auto-lock after</string>
+    <string name="auto_lock_never">Never</string>
 </resources>

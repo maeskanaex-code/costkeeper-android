@@ -86,4 +86,12 @@
     <string name="set_budget">设置每月预算</string>
     <string name="budget_amount">预算金额</string>
     <string name="please_enter_valid_amount">请输入有效金额</string>
+
+    <!-- Security -->
+    <string name="security_section">安全</string>
+    <string name="lock_enabled">使用 PIN 锁定应用</string>
+    <string name="biometric_enabled">使用生物识别解锁</string>
+    <string name="auto_lock_label">自动锁定时间</string>
+    <string name="auto_lock_never">永不</string>
+
 </resources>

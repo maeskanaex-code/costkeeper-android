@@ -94,4 +94,10 @@
     <string name="budget_warning">⚠️ Предупреждение: Вы использовали</string>
     <string name="set_budget">Установить месячный бюджет</string>
     <string name="budget_amount">Сумма бюджета</string>
+    <!-- Security -->
+    <string name="security_section">БЕЗОПАСНОСТЬ</string>
+    <string name="lock_enabled">Блокировать приложение PIN-кодом</string>
+    <string name="biometric_enabled">Разблокировать по биометрии</string>
+    <string name="auto_lock_label">Автоблокировка через</string>
+    <string name="auto_lock_never">Никогда</string>
 </resources>
