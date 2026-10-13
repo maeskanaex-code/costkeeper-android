@@ -8,12 +8,25 @@ build/
 local.properties
 .DS_Store
 
-# Keystore & Secrets - NEVER commit
+# Keystore - NEVER commit
 *.jks
 *.keystore
 thekey
 keystore.properties
 
-# IDE & Build Outputs
+# IDE - machine specific
 .idea/
+*.hprof
+*.log
+
+# Build outputs
 app/release/
+app/debug/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Windows
+Thumbs.db
+desktop.ini
