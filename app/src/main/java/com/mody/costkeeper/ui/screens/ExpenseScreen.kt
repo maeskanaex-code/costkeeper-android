@@ -41,6 +41,9 @@ import com.mody.costkeeper.ui.components.*
 import com.mody.costkeeper.ui.theme.*
 import com.mody.costkeeper.ui.viewmodel.ExpenseViewModel
 import com.mody.costkeeper.utils.*
+import com.mody.costkeeper.util.BiometricHelper
+import com.mody.costkeeper.util.SecurityManager
+import androidx.compose.material3.Switch
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -1065,6 +1068,13 @@ fun SettingsDialog(
     val context = LocalContext.current
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var isExporting by remember { mutableStateOf(false) }
+    // Security state
+    var lockEnabled by remember { mutableStateOf(SecurityManager.isLockEnabled(context)) }
+    var biometricEnabled by remember { mutableStateOf(SecurityManager.isBiometricEnabled(context)) }
+    var autoLockMinutes by remember { mutableStateOf(SecurityManager.getAutoLockMinutes(context)) }
+    var showPinSetup by remember { mutableStateOf(false) }
+    val biometricAvailable = remember { BiometricHelper.canUseBiometric(context) }
+
 
     val surfaceBg = if (isDarkTheme) DarkSurfaceElevated else LightSurfaceElevated
     val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
@@ -1098,6 +1108,122 @@ fun SettingsDialog(
                     lightText = lightText,
                     darkText = darkText
                 )
+                HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
+
+                // ============ SECURITY ============
+                SectionLabel(stringResource(R.string.security_section), isDarkTheme)
+
+                // Lock toggle
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.lock_enabled),
+                            color = textPrimary,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    Switch(
+                        checked = lockEnabled,
+                        onCheckedChange = { enabled ->
+                            if (enabled) {
+                                // Open PIN setup
+                                showPinSetup = true
+                            } else {
+                                // Disable: clear PIN
+                                SecurityManager.clearPin(context)
+                                lockEnabled = false
+                                biometricEnabled = false
+                            }
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = TextOnAccent,
+                            checkedTrackColor = PrimaryBlue
+                        )
+                    )
+                }
+
+                // Biometric toggle (only if lock is enabled)
+                if (lockEnabled && biometricAvailable) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.biometric_enabled),
+                                color = textPrimary,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        Switch(
+                            checked = biometricEnabled,
+                            onCheckedChange = { enabled ->
+                                biometricEnabled = enabled
+                                SecurityManager.setBiometricEnabled(context, enabled)
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = TextOnAccent,
+                                checkedTrackColor = PrimaryBlue
+                            )
+                        )
+                    }
+                }
+
+                // Auto-lock timer (only if lock is enabled)
+                if (lockEnabled) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = stringResource(R.string.auto_lock_label),
+                            color = textMuted,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(Modifier.height(8.dp))
+
+                        val options = listOf(0, 1, 5, 15, 30)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            options.forEach { minutes ->
+                                val selected = autoLockMinutes == minutes
+                                val label = if (minutes == 0) stringResource(R.string.auto_lock_never)
+                                else "${minutes}m"
+
+                                Surface(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable {
+                                            autoLockMinutes = minutes
+                                            SecurityManager.setAutoLockMinutes(context, minutes)
+                                        },
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (selected) PrimaryBlue
+                                    else if (isDarkTheme) DarkSurfaceHighest else LightSurfaceHighest
+                                ) {
+                                    Text(
+                                        text = label,
+                                        color = if (selected) TextOnAccent else textMuted,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
 
                 HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
 
@@ -1252,6 +1378,31 @@ fun SettingsDialog(
             }
         }
     )
+    // ============ PIN SETUP MODAL ============
+    if (showPinSetup) {
+        androidx.compose.ui.window.Dialog(
+            onDismissRequest = { showPinSetup = false },
+            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(if (isDarkTheme) DarkBackground else LightBackground)
+            ) {
+                LockScreen(
+                    isDarkTheme = isDarkTheme,
+                    isSetupMode = true,
+                    onSuccess = {
+                        showPinSetup = false
+                        lockEnabled = true
+                        SecurityManager.setLockEnabled(context, true)
+                    },
+                    onCancel = { showPinSetup = false }
+                )
+            }
+        }
+    }
+
 
     if (showDeleteConfirmation) {
         AlertDialog(
