@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace = "com.mody.costkeeper"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.mody.costkeeper"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 3
         versionName = "1.0.3"
     }
