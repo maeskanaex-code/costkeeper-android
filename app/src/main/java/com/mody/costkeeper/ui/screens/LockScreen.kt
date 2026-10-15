@@ -1,9 +1,9 @@
 package com.mody.costkeeper.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -20,12 +20,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
+import com.mody.costkeeper.R
 import com.mody.costkeeper.ui.theme.*
 import com.mody.costkeeper.util.BiometricHelper
 import com.mody.costkeeper.util.SecurityManager
@@ -54,6 +56,28 @@ fun LockScreen(
     val biometricAvailable = remember { BiometricHelper.canUseBiometric(context) }
     val biometricEnabled = remember { SecurityManager.isBiometricEnabled(context) }
     val showBiometricKey = !isSetupMode && biometricAvailable && biometricEnabled
+
+    // String resources
+    val titleEnter = stringResource(R.string.lock_title_enter)
+    val subtitleEnter = stringResource(R.string.lock_subtitle_enter)
+    val titleCreate = stringResource(R.string.lock_title_create)
+    val titleConfirm = stringResource(R.string.lock_title_confirm)
+    val subtitleCreate = stringResource(R.string.lock_subtitle_create)
+    val subtitleConfirm = stringResource(R.string.lock_subtitle_confirm)
+    val titleHint = stringResource(R.string.lock_title_hint)
+    val subtitleHint = stringResource(R.string.lock_subtitle_hint)
+    val hintPlaceholder = stringResource(R.string.lock_hint_placeholder)
+    val btnSkip = stringResource(R.string.lock_skip)
+    val btnSave = stringResource(R.string.lock_save)
+    val errMismatch = stringResource(R.string.lock_error_mismatch)
+    val errIncorrect = stringResource(R.string.lock_error_incorrect)
+    val errAttemptsLeft = stringResource(R.string.lock_error_attempts_left)
+    val errTooMany = stringResource(R.string.lock_error_too_many)
+    val errBiometricUnavailable = stringResource(R.string.lock_biometric_unavailable)
+    val btnShowHint = stringResource(R.string.lock_show_hint)
+    val btnHideHint = stringResource(R.string.lock_hide_hint)
+    val biometricDesc = stringResource(R.string.lock_biometric_content_desc)
+    val backspaceDesc = stringResource(R.string.lock_backspace_desc)
 
     val background = if (isDarkTheme) DarkBackground else LightBackground
     val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
@@ -104,10 +128,10 @@ fun LockScreen(
 
             Text(
                 text = when {
-                    showHintInput -> "Add a hint (optional)"
-                    isSetupMode && !isConfirming -> "Create your PIN"
-                    isSetupMode && isConfirming -> "Confirm your PIN"
-                    else -> "Enter your PIN"
+                    showHintInput -> titleHint
+                    isSetupMode && !isConfirming -> titleCreate
+                    isSetupMode && isConfirming -> titleConfirm
+                    else -> titleEnter
                 },
                 color = textPrimary,
                 style = MaterialTheme.typography.headlineMedium,
@@ -119,10 +143,10 @@ fun LockScreen(
 
             Text(
                 text = when {
-                    showHintInput -> "Helps you remember if you forget"
-                    isSetupMode && !isConfirming -> "Choose a 4-digit code to lock the app"
-                    isSetupMode && isConfirming -> "Enter the same PIN again"
-                    else -> "Unlock CostKeeper to continue"
+                    showHintInput -> subtitleHint
+                    isSetupMode && !isConfirming -> subtitleCreate
+                    isSetupMode && isConfirming -> subtitleConfirm
+                    else -> subtitleEnter
                 },
                 color = textMuted,
                 style = MaterialTheme.typography.bodyMedium,
@@ -137,7 +161,7 @@ fun LockScreen(
                     onValueChange = { if (it.length <= 40) hintText = it },
                     placeholder = {
                         Text(
-                            "e.g. My birthday year",
+                            hintPlaceholder,
                             color = textMuted
                         )
                     },
@@ -174,7 +198,7 @@ fun LockScreen(
                         border = BorderStroke(1.dp, if (isDarkTheme) BorderDark else LightBorder)
                     ) {
                         Text(
-                            "Skip",
+                            btnSkip,
                             color = textPrimary,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -194,7 +218,7 @@ fun LockScreen(
                         shape = RoundedCornerShape(14.dp)
                     ) {
                         Text(
-                            "Save",
+                            btnSave,
                             color = TextOnAccent,
                             fontWeight = FontWeight.Bold
                         )
@@ -243,6 +267,8 @@ fun LockScreen(
                 NumberPad(
                     isDarkTheme = isDarkTheme,
                     showBiometricKey = showBiometricKey,
+                    biometricDesc = biometricDesc,
+                    backspaceDesc = backspaceDesc,
                     onBiometricClick = {
                         val activity = context as? FragmentActivity
                         if (activity != null) {
@@ -252,7 +278,7 @@ fun LockScreen(
                                 onError = { err ->
                                     if (err.contains("No biometric", true) ||
                                         err.contains("not available", true)) {
-                                        errorMessage = "Biometric not available"
+                                        errorMessage = errBiometricUnavailable
                                     }
                                 }
                             )
@@ -271,7 +297,7 @@ fun LockScreen(
                                             onSuccess()
                                         }
                                     } else {
-                                        errorMessage = "PINs don't match. Try again."
+                                        errorMessage = errMismatch
                                         confirmPin = ""
                                         isConfirming = false
                                         pin = ""
@@ -291,9 +317,9 @@ fun LockScreen(
                                             attempts++
                                             errorMessage = if (attempts >= 3) {
                                                 attempts = 0
-                                                "Too many attempts. Try again."
+                                                errTooMany
                                             } else {
-                                                "Incorrect PIN. ${3 - attempts} attempts left."
+                                                "$errIncorrect ${3 - attempts} $errAttemptsLeft"
                                             }
                                             pin = ""
                                         }
@@ -321,7 +347,7 @@ fun LockScreen(
                             revealedHint = if (revealedHint == null) hint else null
                         }) {
                             Text(
-                                text = if (revealedHint == null) "Show hint" else "Hide hint",
+                                text = if (revealedHint == null) btnShowHint else btnHideHint,
                                 color = PrimaryBlue,
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold
@@ -335,7 +361,7 @@ fun LockScreen(
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Text(
-                                     text = it,
+                                    text = it,
                                     color = PrimaryBlue,
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
@@ -354,6 +380,8 @@ fun LockScreen(
 private fun NumberPad(
     isDarkTheme: Boolean,
     showBiometricKey: Boolean,
+    biometricDesc: String,
+    backspaceDesc: String,
     onBiometricClick: () -> Unit,
     onDigit: (String) -> Unit,
     onBackspace: () -> Unit
@@ -392,7 +420,7 @@ private fun NumberPad(
                 ) {
                     Icon(
                         Icons.Default.Fingerprint,
-                        contentDescription = "Biometric",
+                        contentDescription = biometricDesc,
                         tint = PrimaryBlue,
                         modifier = Modifier.size(26.dp)
                     )
@@ -412,7 +440,7 @@ private fun NumberPad(
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.Backspace,
-                    contentDescription = "Delete",
+                    contentDescription = backspaceDesc,
                     tint = keyText,
                     modifier = Modifier.size(22.dp)
                 )

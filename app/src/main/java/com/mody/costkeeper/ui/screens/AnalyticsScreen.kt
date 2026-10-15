@@ -1,5 +1,6 @@
 package com.mody.costkeeper.ui.screens
 
+import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -33,6 +34,7 @@ import com.mody.costkeeper.utils.AppCurrency
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
 @Composable
 fun AnalyticsScreen(
@@ -55,16 +57,15 @@ fun AnalyticsScreen(
             .padding(horizontal = 16.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Header
         Column {
             Text(
-                text = "Analytics",
+                text = stringResource(R.string.analytics_title),
                 color = textPrimary,
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.ExtraBold
             )
             Text(
-                text = "Your last 7 days at a glance",
+                text = stringResource(R.string.analytics_subtitle),
                 color = textMuted,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -77,8 +78,8 @@ fun AnalyticsScreen(
             WeeklyBarChartCard(expenses, isDarkTheme)
             WeeklyComparisonCard(expenses, isDarkTheme, currency)
             CategoryPieChartCard(expenses, isDarkTheme, currency)
-            CategoryBreakdownCard(expenses, "Expenses by Category", isIncome = false, isDarkTheme, currency)
-            CategoryBreakdownCard(expenses, "Income by Category", isIncome = true, isDarkTheme, currency)
+            CategoryBreakdownCard(expenses, stringResource(R.string.analytics_expenses_by_category), isIncome = false, isDarkTheme, currency)
+            CategoryBreakdownCard(expenses, stringResource(R.string.analytics_income_by_category), isIncome = true, isDarkTheme, currency)
         }
 
         Spacer(Modifier.height(8.dp))
@@ -92,22 +93,12 @@ fun AnalyticsScreen(
     }
 }
 
-/* ================= WEEKLY SUMMARY ================= */
-
 @Composable
 fun WeeklySummaryCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, currency: AppCurrency) {
     val thisWeekStart = getStartOfDay(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(6))
 
-    val weeklyIncome = expenses
-        .filter { it.amount > 0 }
-        .filter { it.date >= thisWeekStart }
-        .sumOf { it.amount }
-
-    val weeklyExpense = expenses
-        .filter { it.amount < 0 }
-        .filter { it.date >= thisWeekStart }
-        .sumOf { kotlin.math.abs(it.amount) }
-
+    val weeklyIncome = expenses.filter { it.amount > 0 }.filter { it.date >= thisWeekStart }.sumOf { it.amount }
+    val weeklyExpense = expenses.filter { it.amount < 0 }.filter { it.date >= thisWeekStart }.sumOf { abs(it.amount) }
     val balance = weeklyIncome - weeklyExpense
 
     val cardBg = if (isDarkTheme) DarkSurface else LightSurface
@@ -121,12 +112,10 @@ fun WeeklySummaryCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, curre
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
+            modifier = Modifier.fillMaxWidth().padding(20.dp)
         ) {
             Text(
-                text = "THIS WEEK",
+                text = stringResource(R.string.analytics_this_week_label),
                 color = textMuted,
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold
@@ -140,7 +129,7 @@ fun WeeklySummaryCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, curre
                 fontWeight = FontWeight.ExtraBold
             )
             Text(
-                text = "Net balance",
+                text = stringResource(R.string.analytics_net_balance),
                 color = textMuted,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -155,15 +144,10 @@ fun WeeklySummaryCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, curre
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(IncomeGreen)
-                        )
+                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(IncomeGreen))
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            text = "Income",
+                            text = stringResource(R.string.income),
                             color = textMuted,
                             style = MaterialTheme.typography.labelMedium
                         )
@@ -177,24 +161,14 @@ fun WeeklySummaryCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, curre
                     )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .height(40.dp)
-                        .background(if (isDarkTheme) DividerDark else LightDivider)
-                )
+                Box(modifier = Modifier.width(1.dp).height(40.dp).background(if (isDarkTheme) DividerDark else LightDivider))
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(ExpenseRed)
-                        )
+                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(ExpenseRed))
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            text = "Expense",
+                            text = stringResource(R.string.expense),
                             color = textMuted,
                             style = MaterialTheme.typography.labelMedium
                         )
@@ -212,8 +186,6 @@ fun WeeklySummaryCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, curre
     }
 }
 
-/* ================= WEEKLY BAR CHART ================= */
-
 @Composable
 fun WeeklyBarChartCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean) {
     val now = System.currentTimeMillis()
@@ -223,17 +195,8 @@ fun WeeklyBarChartCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean) {
         (0..6).map { daysAgo ->
             val dayStart = getStartOfDay(now - TimeUnit.DAYS.toMillis(daysAgo.toLong()))
             val dayEnd = dayStart + TimeUnit.DAYS.toMillis(1)
-
-            val dailyIncome = expenses
-                .filter { it.amount > 0 }
-                .filter { it.date in dayStart until dayEnd }
-                .sumOf { it.amount }
-
-            val dailyExpense = expenses
-                .filter { it.amount < 0 }
-                .filter { it.date in dayStart until dayEnd }
-                .sumOf { kotlin.math.abs(it.amount) }
-
+            val dailyIncome = expenses.filter { it.amount > 0 }.filter { it.date in dayStart until dayEnd }.sumOf { it.amount }
+            val dailyExpense = expenses.filter { it.amount < 0 }.filter { it.date in dayStart until dayEnd }.sumOf { abs(it.amount) }
             val label = dateFormat.format(Date(dayStart))
             Triple(label, dailyIncome, dailyExpense)
         }.reversed()
@@ -251,20 +214,16 @@ fun WeeklyBarChartCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean) {
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
             Text(
-                text = "WEEKLY ACTIVITY",
+                text = stringResource(R.string.analytics_weekly_activity),
                 color = textMuted,
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Daily income vs expense",
+                text = stringResource(R.string.analytics_daily_income_vs_expense),
                 color = textPrimary,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
@@ -279,42 +238,25 @@ fun WeeklyBarChartCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean) {
             ) {
                 Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(IncomeGreen))
                 Spacer(Modifier.width(6.dp))
-                Text(
-                    text = "Income",
-                    color = textMuted,
-                    style = MaterialTheme.typography.labelSmall
-                )
+                Text(stringResource(R.string.income), color = textMuted, style = MaterialTheme.typography.labelSmall)
                 Spacer(Modifier.width(16.dp))
                 Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(ExpenseRed))
                 Spacer(Modifier.width(6.dp))
-                Text(
-                    text = "Expense",
-                    color = textMuted,
-                    style = MaterialTheme.typography.labelSmall
-                )
+                Text(stringResource(R.string.expense), color = textMuted, style = MaterialTheme.typography.labelSmall)
             }
 
             Spacer(Modifier.height(12.dp))
 
             if (maxValue == 0.0) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) {
                     Text(
-                        text = "No activity this week",
+                        text = stringResource(R.string.analytics_no_activity),
                         color = textMuted,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
             } else {
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp)
-                ) {
+                Canvas(modifier = Modifier.fillMaxWidth().height(180.dp)) {
                     val groupCount = dailyData.size
                     val groupWidth = size.width / groupCount
                     val barWidth = groupWidth * 0.28f
@@ -325,13 +267,10 @@ fun WeeklyBarChartCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean) {
                     dailyData.forEachIndexed { index, (label, income, expense) ->
                         val incomeRatio = (income / safeMax).toFloat()
                         val expenseRatio = (expense / safeMax).toFloat()
-
                         val incomeHeight = (size.height - labelHeightPx) * incomeRatio
                         val expenseHeight = (size.height - labelHeightPx) * expenseRatio
-
                         val groupStartX = index * groupWidth
                         val centerX = groupStartX + groupWidth / 2
-
                         val incomeX = centerX - barWidth - gap / 2
                         val expenseX = centerX + gap / 2
 
@@ -343,7 +282,6 @@ fun WeeklyBarChartCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean) {
                                 cornerRadius = CornerRadius(4f, 4f)
                             )
                         }
-
                         if (expenseHeight > 0f) {
                             drawRoundRect(
                                 color = ExpenseRed,
@@ -357,9 +295,9 @@ fun WeeklyBarChartCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean) {
                             label,
                             centerX,
                             size.height - 10f,
-                            android.graphics.Paint().apply {
+                            Paint().apply {
                                 color = if (isDarkTheme) android.graphics.Color.parseColor("#71717A") else android.graphics.Color.parseColor("#52525B")
-                                textAlign = android.graphics.Paint.Align.CENTER
+                                textAlign = Paint.Align.CENTER
                                 textSize = 28f
                                 isAntiAlias = true
                             }
@@ -371,40 +309,22 @@ fun WeeklyBarChartCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean) {
     }
 }
 
-/* ================= WEEKLY COMPARISON ================= */
-
 @Composable
 fun WeeklyComparisonCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, currency: AppCurrency) {
     val now = System.currentTimeMillis()
-
     val thisWeekStart = getStartOfDay(now - TimeUnit.DAYS.toMillis(6))
 
-    val thisWeekIncome = expenses
-        .filter { it.amount > 0 }
-        .filter { it.date >= thisWeekStart }
-        .sumOf { it.amount }
-
-    val thisWeekExpense = expenses
-        .filter { it.amount < 0 }
-        .filter { it.date >= thisWeekStart }
-        .sumOf { kotlin.math.abs(it.amount) }
+    val thisWeekIncome = expenses.filter { it.amount > 0 }.filter { it.date >= thisWeekStart }.sumOf { it.amount }
+    val thisWeekExpense = expenses.filter { it.amount < 0 }.filter { it.date >= thisWeekStart }.sumOf { abs(it.amount) }
 
     val lastWeekStart = getStartOfDay(now - TimeUnit.DAYS.toMillis(13))
     val lastWeekEnd = thisWeekStart
 
-    val lastWeekIncome = expenses
-        .filter { it.amount > 0 }
-        .filter { it.date in lastWeekStart until lastWeekEnd }
-        .sumOf { it.amount }
-
-    val lastWeekExpense = expenses
-        .filter { it.amount < 0 }
-        .filter { it.date in lastWeekStart until lastWeekEnd }
-        .sumOf { kotlin.math.abs(it.amount) }
+    val lastWeekIncome = expenses.filter { it.amount > 0 }.filter { it.date in lastWeekStart until lastWeekEnd }.sumOf { it.amount }
+    val lastWeekExpense = expenses.filter { it.amount < 0 }.filter { it.date in lastWeekStart until lastWeekEnd }.sumOf { abs(it.amount) }
 
     val incomeDiff = thisWeekIncome - lastWeekIncome
     val incomePercent = if (lastWeekIncome > 0) ((incomeDiff / lastWeekIncome) * 100) else 0.0
-
     val expenseDiff = thisWeekExpense - lastWeekExpense
     val expensePercent = if (lastWeekExpense > 0) ((expenseDiff / lastWeekExpense) * 100) else 0.0
 
@@ -418,36 +338,25 @@ fun WeeklyComparisonCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, cu
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
             Text(
-                text = "VS LAST WEEK",
+                text = stringResource(R.string.analytics_vs_last_week),
                 color = textMuted,
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "How this week compares",
+                text = stringResource(R.string.analytics_how_compares),
                 color = textPrimary,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Income",
-                        color = textMuted,
-                        style = MaterialTheme.typography.labelMedium
-                    )
+                    Text(stringResource(R.string.income), color = textMuted, style = MaterialTheme.typography.labelMedium)
                     Text(
                         text = "${currency.symbol}${"%.2f".format(thisWeekIncome)}",
                         color = IncomeGreen,
@@ -462,19 +371,10 @@ fun WeeklyComparisonCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, cu
                     )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .height(50.dp)
-                        .background(if (isDarkTheme) DividerDark else LightDivider)
-                )
+                Box(modifier = Modifier.width(1.dp).height(50.dp).background(if (isDarkTheme) DividerDark else LightDivider))
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Expense",
-                        color = textMuted,
-                        style = MaterialTheme.typography.labelMedium
-                    )
+                    Text(stringResource(R.string.expense), color = textMuted, style = MaterialTheme.typography.labelMedium)
                     Text(
                         text = "${currency.symbol}${"%.2f".format(thisWeekExpense)}",
                         color = ExpenseRed,
@@ -492,8 +392,6 @@ fun WeeklyComparisonCard(expenses: List<ExpenseEntity>, isDarkTheme: Boolean, cu
         }
     }
 }
-
-/* ================= PIE CHART CARD ================= */
 
 @Composable
 fun CategoryPieChartCard(
@@ -514,20 +412,16 @@ fun CategoryPieChartCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
             Text(
-                text = "SPENDING BREAKDOWN",
+                text = stringResource(R.string.analytics_spending_breakdown),
                 color = textMuted,
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Tap a slice for details",
+                text = stringResource(R.string.analytics_tap_slice),
                 color = textPrimary,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
@@ -536,14 +430,9 @@ fun CategoryPieChartCard(
             Spacer(Modifier.height(16.dp))
 
             if (weeklyExpenses.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
                     Text(
-                        text = "No expenses this week",
+                        text = stringResource(R.string.analytics_no_expenses_week),
                         color = textMuted,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -558,8 +447,6 @@ fun CategoryPieChartCard(
         }
     }
 }
-
-/* ================= CATEGORY BREAKDOWN ================= */
 
 @Composable
 fun CategoryBreakdownCard(
@@ -577,7 +464,7 @@ fun CategoryBreakdownCard(
         .groupBy { it.category }
         .mapValues { entry ->
             if (isIncome) entry.value.sumOf { it.amount }
-            else entry.value.sumOf { kotlin.math.abs(it.amount) }
+            else entry.value.sumOf { abs(it.amount) }
         }
         .toList()
         .sortedByDescending { it.second }
@@ -592,7 +479,8 @@ fun CategoryBreakdownCard(
     }
 
     val titleColor = if (isIncome) IncomeGreen else ExpenseRed
-    val emptyText = if (isIncome) "No income this week" else "No expenses this week"
+    val emptyText = if (isIncome) stringResource(R.string.analytics_no_income_week)
+    else stringResource(R.string.analytics_no_expenses_week)
 
     val cardBg = if (isDarkTheme) DarkSurface else LightSurface
     val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
@@ -604,11 +492,7 @@ fun CategoryBreakdownCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
             Text(
                 text = title.uppercase(),
                 color = textMuted,
@@ -617,7 +501,7 @@ fun CategoryBreakdownCard(
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "${currency.symbol}${"%.2f".format(total)} total",
+                text = "${currency.symbol}${"%.2f".format(total)} ${stringResource(R.string.analytics_total)}",
                 color = titleColor,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
@@ -625,32 +509,18 @@ fun CategoryBreakdownCard(
             Spacer(Modifier.height(16.dp))
 
             if (!hasData) {
-                Text(
-                    text = emptyText,
-                    color = textMuted,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text(text = emptyText, color = textMuted, style = MaterialTheme.typography.bodyMedium)
             } else {
                 weeklyByCategory.forEachIndexed { index, (category, amount) ->
                     val percent = if (total > 0) (amount / total * 100) else 0.0
 
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(10.dp)
-                                    .clip(CircleShape)
-                                    .background(colors[index % colors.size])
-                            )
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(colors[index % colors.size]))
                             Spacer(Modifier.width(10.dp))
                             Text(
                                 text = category,
@@ -679,8 +549,6 @@ fun CategoryBreakdownCard(
         }
     }
 }
-
-/* ================= HELPER ================= */
 
 fun getStartOfDay(timestamp: Long): Long {
     val calendar = Calendar.getInstance()
