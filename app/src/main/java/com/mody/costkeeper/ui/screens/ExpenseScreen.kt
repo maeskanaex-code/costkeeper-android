@@ -1212,13 +1212,24 @@ fun SettingsDialog(
 
                 SectionLabel(languageText, isDarkTheme)
 
+                val effectiveLanguage = remember(selectedLanguage) {
+                    if (selectedLanguage == "system") {
+                        val sysLang = Locale.getDefault().language
+                        when {
+                            sysLang.startsWith("ru") -> "ru"
+                            sysLang.startsWith("zh") -> "zh"
+                            else -> "en"
+                        }
+                    } else selectedLanguage
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    LanguageOption("English", selectedLanguage == "en", { onLanguageChange("en") }, isDarkTheme, Modifier.weight(1f))
-                    LanguageOption("Русский", selectedLanguage == "ru", { onLanguageChange("ru") }, isDarkTheme, Modifier.weight(1f))
-                    LanguageOption("中文", selectedLanguage == "zh", { onLanguageChange("zh") }, isDarkTheme, Modifier.weight(1f))
+                    LanguageOption("English", effectiveLanguage == "en", { onLanguageChange("en") }, isDarkTheme, Modifier.weight(1f))
+                    LanguageOption("Русский", effectiveLanguage == "ru", { onLanguageChange("ru") }, isDarkTheme, Modifier.weight(1f))
+                    LanguageOption("中文", effectiveLanguage == "zh", { onLanguageChange("zh") }, isDarkTheme, Modifier.weight(1f))
                 }
 
                 HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)

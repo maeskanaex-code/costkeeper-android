@@ -91,23 +91,14 @@ fun LogoImage() {
         )
     )
 
-    Box(
+    Image(
+        painter = painterResource(id = R.drawable.ic_splash_logo),
+        contentDescription = "App Logo",
         modifier = Modifier
             .size(132.dp)
-            .scale(scale)
-            .clip(RoundedCornerShape(32.dp))
-            .background(PrimaryBlue.copy(alpha = 0.15f)),
-        contentAlignment = Alignment.Center
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_splash_logo),
-            contentDescription = "App Logo",
-            modifier = Modifier
-                .size(112.dp)
-                .clip(RoundedCornerShape(28.dp)),
-            contentScale = ContentScale.Crop
-        )
-    }
+            .scale(scale),
+        contentScale = ContentScale.Fit
+    )
 }
 
 @Composable
