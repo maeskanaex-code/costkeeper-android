@@ -47,7 +47,6 @@ fun LockScreen(
     var confirmPin by remember { mutableStateOf("") }
     var isConfirming by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var attempts by remember { mutableIntStateOf(0) }
 
     var showHintInput by remember { mutableStateOf(false) }
     var hintText by remember { mutableStateOf("") }
@@ -57,7 +56,6 @@ fun LockScreen(
     val biometricEnabled = remember { SecurityManager.isBiometricEnabled(context) }
     val showBiometricKey = !isSetupMode && biometricAvailable && biometricEnabled
 
-    // String resources
     val titleEnter = stringResource(R.string.lock_title_enter)
     val subtitleEnter = stringResource(R.string.lock_subtitle_enter)
     val titleCreate = stringResource(R.string.lock_title_create)
@@ -71,8 +69,6 @@ fun LockScreen(
     val btnSave = stringResource(R.string.lock_save)
     val errMismatch = stringResource(R.string.lock_error_mismatch)
     val errIncorrect = stringResource(R.string.lock_error_incorrect)
-    val errAttemptsLeft = stringResource(R.string.lock_error_attempts_left)
-    val errTooMany = stringResource(R.string.lock_error_too_many)
     val errBiometricUnavailable = stringResource(R.string.lock_biometric_unavailable)
     val btnShowHint = stringResource(R.string.lock_show_hint)
     val btnHideHint = stringResource(R.string.lock_hide_hint)
@@ -314,13 +310,7 @@ fun LockScreen(
                                         if (SecurityManager.verifyPin(context, pin)) {
                                             onSuccess()
                                         } else {
-                                            attempts++
-                                            errorMessage = if (attempts >= 3) {
-                                                attempts = 0
-                                                errTooMany
-                                            } else {
-                                                "$errIncorrect ${3 - attempts} $errAttemptsLeft"
-                                            }
+                                            errorMessage = errIncorrect
                                             pin = ""
                                         }
                                     }
