@@ -13,10 +13,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mody.costkeeper.R
 import com.mody.costkeeper.data.local.ExpenseEntity
 import com.mody.costkeeper.ui.theme.*
 import com.mody.costkeeper.ui.viewmodel.ExpenseViewModel
@@ -39,16 +41,37 @@ fun EditExpenseDialog(
     val isIncome = expense.amount > 0
 
     val expenseCategories = listOf(
-        "Food & Dining", "Transportation", "Shopping", "Entertainment",
-        "Bills & Utilities", "Healthcare", "Education", "Rent", "Travel", "Other"
+        stringResource(R.string.category_food_dining),
+        stringResource(R.string.category_transportation),
+        stringResource(R.string.category_shopping),
+        stringResource(R.string.category_entertainment),
+        stringResource(R.string.category_bills_utilities),
+        stringResource(R.string.category_healthcare),
+        stringResource(R.string.category_education),
+        stringResource(R.string.category_rent),
+        stringResource(R.string.category_travel),
+        stringResource(R.string.category_other)
     )
-    val incomeCategories = listOf("Salary", "Others")
+    val incomeCategories = listOf(
+        stringResource(R.string.category_salary),
+        stringResource(R.string.category_others_income)
+    )
     val categories = if (isIncome) incomeCategories else expenseCategories
 
     val surfaceBg = if (isDarkTheme) DarkSurfaceElevated else LightSurfaceElevated
     val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
     val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
     val inputBorder = if (isDarkTheme) BorderDark else LightBorder
+
+    val titleEditIncome = stringResource(R.string.edit_income)
+    val titleEditExpense = stringResource(R.string.edit_expense)
+    val subtitleText = stringResource(R.string.edit_subtitle)
+    val amountLabel = stringResource(R.string.amount)
+    val categoryLabel = stringResource(R.string.category)
+    val categoryLabelUpper = categoryLabel.uppercase()
+    val errText = stringResource(R.string.please_enter_valid_amount)
+    val saveText = stringResource(R.string.save_changes)
+    val cancelText = stringResource(R.string.cancel)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -57,14 +80,14 @@ fun EditExpenseDialog(
         title = {
             Column {
                 Text(
-                    text = "Edit ${if (isIncome) "Income" else "Expense"}",
+                    text = if (isIncome) titleEditIncome else titleEditExpense,
                     color = textPrimary,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Update the details below",
+                    text = subtitleText,
                     color = textMuted,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -75,7 +98,6 @@ fun EditExpenseDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Amount field
                 OutlinedTextField(
                     value = amount,
                     onValueChange = {
@@ -84,7 +106,7 @@ fun EditExpenseDialog(
                             showError = false
                         }
                     },
-                    label = { Text("Amount") },
+                    label = { Text(amountLabel) },
                     leadingIcon = {
                         Text(
                             text = currency.symbol,
@@ -111,21 +133,19 @@ fun EditExpenseDialog(
 
                 if (showError) {
                     Text(
-                        text = "Please enter a valid amount",
+                        text = errText,
                         color = ExpenseRed,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
 
-                // Category label
                 Text(
-                    text = "CATEGORY",
+                    text = categoryLabelUpper,
                     color = textMuted,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold
                 )
 
-                // Category chips (horizontal scroll)
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -160,7 +180,7 @@ fun EditExpenseDialog(
                     .height(48.dp)
             ) {
                 Text(
-                    text = "Save Changes",
+                    text = saveText,
                     color = TextOnAccent,
                     fontWeight = FontWeight.Bold
                 )
@@ -172,7 +192,7 @@ fun EditExpenseDialog(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Cancel",
+                    text = cancelText,
                     color = textMuted
                 )
             }

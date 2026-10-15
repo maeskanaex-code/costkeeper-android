@@ -12,9 +12,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mody.costkeeper.R
 import com.mody.costkeeper.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -36,6 +38,9 @@ fun CustomDatePickerDialog(
     val surfaceBg = if (isDarkTheme) DarkSurfaceElevated else LightSurfaceElevated
     val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
     val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
+
+    val okText = stringResource(R.string.dialog_ok)
+    val cancelText = stringResource(R.string.cancel)
 
     DatePickerDialog(
         onDismissRequest = onDismiss,
@@ -64,7 +69,7 @@ fun CustomDatePickerDialog(
                 }
             ) {
                 Text(
-                    text = "OK",
+                    text = okText,
                     color = PrimaryBlue,
                     fontWeight = FontWeight.Bold
                 )
@@ -73,7 +78,7 @@ fun CustomDatePickerDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(
-                    text = "Cancel",
+                    text = cancelText,
                     color = textMuted
                 )
             }
@@ -95,7 +100,7 @@ fun DateSelectorButton(
     onClick: () -> Unit,
     isDarkTheme: Boolean = true,
     modifier: Modifier = Modifier,
-    label: String = "Date"
+    label: String = stringResource(R.string.date_label_upper)
 ) {
     val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
     val formattedDate = dateFormat.format(Date(selectedDate))
@@ -133,7 +138,7 @@ fun DateSelectorButton(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = label.uppercase(),
+                text = label,
                 fontSize = 11.sp,
                 color = textMuted,
                 fontWeight = FontWeight.SemiBold,

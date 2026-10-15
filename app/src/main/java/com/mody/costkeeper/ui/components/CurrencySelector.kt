@@ -16,9 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mody.costkeeper.R
 import com.mody.costkeeper.ui.theme.*
 import com.mody.costkeeper.utils.AppCurrency
 
@@ -38,6 +40,12 @@ fun CurrencySelectorDialog(
     val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
     val borderColor = if (isDarkTheme) BorderDark else LightBorder
 
+    val titleText = stringResource(R.string.currency_title)
+    val subtitleText = stringResource(R.string.currency_subtitle)
+    val applyText = stringResource(R.string.apply)
+    val cancelText = stringResource(R.string.cancel)
+    val selectedDesc = stringResource(R.string.selected_desc)
+
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = surfaceBg,
@@ -45,14 +53,14 @@ fun CurrencySelectorDialog(
         title = {
             Column {
                 Text(
-                    text = "Currency",
+                    text = titleText,
                     color = textPrimary,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Choose your preferred currency",
+                    text = subtitleText,
                     color = textMuted,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -71,7 +79,8 @@ fun CurrencySelectorDialog(
                         isSelected = selectedCurrency == currency,
                         onClick = { selectedCurrency = currency },
                         isDarkTheme = isDarkTheme,
-                        borderColor = borderColor
+                        borderColor = borderColor,
+                        selectedDesc = selectedDesc
                     )
                 }
             }
@@ -87,7 +96,7 @@ fun CurrencySelectorDialog(
                 modifier = Modifier.height(48.dp)
             ) {
                 Text(
-                    text = "Apply",
+                    text = applyText,
                     color = TextOnAccent,
                     fontWeight = FontWeight.Bold
                 )
@@ -96,7 +105,7 @@ fun CurrencySelectorDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(
-                    text = "Cancel",
+                    text = cancelText,
                     color = textMuted
                 )
             }
@@ -110,7 +119,8 @@ fun CurrencyOptionItem(
     isSelected: Boolean,
     onClick: () -> Unit,
     isDarkTheme: Boolean,
-    borderColor: Color
+    borderColor: Color,
+    selectedDesc: String
 ) {
     val rowBg = when {
         isSelected -> PrimaryBlue.copy(alpha = 0.12f)
@@ -176,7 +186,7 @@ fun CurrencyOptionItem(
             ) {
                 Icon(
                     Icons.Default.Check,
-                    contentDescription = "Selected",
+                    contentDescription = selectedDesc,
                     tint = TextOnAccent,
                     modifier = Modifier.size(18.dp)
                 )

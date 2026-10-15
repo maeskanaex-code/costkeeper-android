@@ -2,7 +2,6 @@ package com.mody.costkeeper.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,10 +16,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.mody.costkeeper.R
 import com.mody.costkeeper.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,6 +40,15 @@ fun CategoryManagerDialog(
     val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
     val inputBorder = if (isDarkTheme) BorderDark else LightBorder
 
+    val titleText = stringResource(R.string.categories_title)
+    val subtitleText = stringResource(R.string.categories_subtitle)
+    val newCategoryHint = stringResource(R.string.new_category_hint)
+    val yourCategoriesLabel = stringResource(R.string.your_categories_label)
+    val noCustomCategories = stringResource(R.string.no_custom_categories)
+    val errCategoryName = stringResource(R.string.please_enter_category_name)
+    val doneText = stringResource(R.string.done)
+    val deleteDesc = stringResource(R.string.delete_desc)
+
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = surfaceBg,
@@ -47,14 +56,14 @@ fun CategoryManagerDialog(
         title = {
             Column {
                 Text(
-                    text = "Categories",
+                    text = titleText,
                     color = textPrimary,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Manage your custom categories",
+                    text = subtitleText,
                     color = textMuted,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -66,7 +75,6 @@ fun CategoryManagerDialog(
                     .fillMaxWidth()
                     .heightIn(max = 480.dp)
             ) {
-                // Add row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -80,7 +88,7 @@ fun CategoryManagerDialog(
                         },
                         placeholder = {
                             Text(
-                                "New category",
+                                newCategoryHint,
                                 color = textMuted,
                                 style = MaterialTheme.typography.bodyMedium
                             )
@@ -115,7 +123,7 @@ fun CategoryManagerDialog(
                     ) {
                         Icon(
                             Icons.Default.Add,
-                            contentDescription = "Add",
+                            contentDescription = newCategoryHint,
                             tint = TextOnAccent
                         )
                     }
@@ -124,7 +132,7 @@ fun CategoryManagerDialog(
                 if (showError) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Please enter a category name",
+                        text = errCategoryName,
                         color = ExpenseRed,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(start = 4.dp)
@@ -134,7 +142,7 @@ fun CategoryManagerDialog(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    text = "YOUR CATEGORIES",
+                    text = yourCategoriesLabel,
                     color = textMuted,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold
@@ -144,7 +152,7 @@ fun CategoryManagerDialog(
 
                 if (customCategories.isEmpty()) {
                     Text(
-                        text = "No custom categories yet. Add one above!",
+                        text = noCustomCategories,
                         color = textMuted,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(vertical = 12.dp)
@@ -157,7 +165,8 @@ fun CategoryManagerDialog(
                             CustomCategoryRow(
                                 name = category,
                                 onDelete = { onDeleteCategory(category) },
-                                isDarkTheme = isDarkTheme
+                                isDarkTheme = isDarkTheme,
+                                deleteDesc = deleteDesc
                             )
                         }
                     }
@@ -167,7 +176,7 @@ fun CategoryManagerDialog(
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(
-                    text = "Done",
+                    text = doneText,
                     color = PrimaryBlue,
                     fontWeight = FontWeight.Bold
                 )
@@ -180,7 +189,8 @@ fun CategoryManagerDialog(
 private fun CustomCategoryRow(
     name: String,
     onDelete: () -> Unit,
-    isDarkTheme: Boolean
+    isDarkTheme: Boolean,
+    deleteDesc: String
 ) {
     val rowBg = if (isDarkTheme) DarkSurface else LightSurface
     val border = if (isDarkTheme) BorderDark else LightBorder
@@ -210,7 +220,7 @@ private fun CustomCategoryRow(
         ) {
             Icon(
                 Icons.Default.Close,
-                contentDescription = "Delete",
+                contentDescription = deleteDesc,
                 tint = ExpenseRed,
                 modifier = Modifier.size(18.dp)
             )

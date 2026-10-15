@@ -11,9 +11,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mody.costkeeper.R
 import com.mody.costkeeper.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,6 +30,18 @@ fun ShareReportDialog(
     val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
     val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
 
+    val titleText = stringResource(R.string.share_report_title)
+    val subtitleText = stringResource(R.string.share_report_subtitle)
+    val generatingText = stringResource(R.string.share_report_generating)
+    val waitText = stringResource(R.string.share_report_wait)
+    val descText = stringResource(R.string.share_report_description)
+    val includedText = stringResource(R.string.share_report_included)
+    val balanceText = stringResource(R.string.share_report_balance)
+    val incomeText = stringResource(R.string.share_report_income)
+    val topText = stringResource(R.string.share_report_top)
+    val generateShareText = stringResource(R.string.share_report_generate_share)
+    val cancelText = stringResource(R.string.cancel)
+
     AlertDialog(
         onDismissRequest = { if (!isGenerating) onDismiss() },
         containerColor = surfaceBg,
@@ -35,14 +49,14 @@ fun ShareReportDialog(
         title = {
             Column {
                 Text(
-                    text = "Share Report",
+                    text = titleText,
                     color = textPrimary,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Generate a beautiful summary image",
+                    text = subtitleText,
                     color = textMuted,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -62,21 +76,21 @@ fun ShareReportDialog(
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     Text(
-                        text = "Generating your report...",
+                        text = generatingText,
                         color = textPrimary,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Please wait a moment",
+                        text = waitText,
                         color = textMuted,
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 } else {
                     Text(
-                        text = "Your report will include a clean summary of your balance, income, expenses, and top spending categories.",
+                        text = descText,
                         color = textMuted,
                         style = MaterialTheme.typography.bodyMedium,
                         lineHeight = 20.sp
@@ -84,7 +98,6 @@ fun ShareReportDialog(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Preview card with 3 items
                     Surface(
                         color = if (isDarkTheme) DarkSurface else LightSurface,
                         shape = RoundedCornerShape(18.dp),
@@ -107,7 +120,7 @@ fun ShareReportDialog(
                             Spacer(modifier = Modifier.height(16.dp))
 
                             Text(
-                                text = "What's included",
+                                text = includedText,
                                 color = textPrimary,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
@@ -119,9 +132,9 @@ fun ShareReportDialog(
                                 horizontalArrangement = Arrangement.SpaceEvenly,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                PreviewItem(emoji = "💰", label = "Balance", isDarkTheme = isDarkTheme)
-                                PreviewItem(emoji = "📈", label = "Income", isDarkTheme = isDarkTheme)
-                                PreviewItem(emoji = "🏷️", label = "Top", isDarkTheme = isDarkTheme)
+                                PreviewItem(emoji = "💰", label = balanceText, isDarkTheme = isDarkTheme)
+                                PreviewItem(emoji = "📈", label = incomeText, isDarkTheme = isDarkTheme)
+                                PreviewItem(emoji = "🏷️", label = topText, isDarkTheme = isDarkTheme)
                             }
                         }
                     }
@@ -146,7 +159,7 @@ fun ShareReportDialog(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "Generate & Share",
+                        text = generateShareText,
                         color = TextOnAccent,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
@@ -161,7 +174,7 @@ fun ShareReportDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Cancel",
+                        text = cancelText,
                         color = textMuted,
                         style = MaterialTheme.typography.bodyMedium
                     )
