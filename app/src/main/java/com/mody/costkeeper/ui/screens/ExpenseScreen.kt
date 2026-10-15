@@ -43,7 +43,6 @@ import com.mody.costkeeper.ui.viewmodel.ExpenseViewModel
 import com.mody.costkeeper.utils.*
 import com.mody.costkeeper.util.BiometricHelper
 import com.mody.costkeeper.util.SecurityManager
-import androidx.compose.material3.Switch
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -110,9 +109,8 @@ fun ExpenseScreen(
     var selectedLanguage by remember { mutableStateOf(prefs.getString("app_language", "system") ?: "system") }
 
     // String resources
+    val appNameText = stringResource(R.string.app_name)
     val balanceText = stringResource(R.string.balance)
-    val overviewText = stringResource(R.string.overview)
-    val noDataText = stringResource(R.string.no_data)
     val amountText = stringResource(R.string.amount)
     val categoryText = stringResource(R.string.category)
     val saveText = stringResource(R.string.save)
@@ -148,6 +146,15 @@ fun ExpenseScreen(
     val noResultsText = stringResource(R.string.no_results)
     val noExpensesMatchSearchText = stringResource(R.string.no_expenses_match_search)
 
+    // Newly added localization
+    val headerSubtitleText = stringResource(R.string.header_subtitle)
+    val transactionsLabelText = stringResource(R.string.transactions_label)
+    val noTransactionsYetText = stringResource(R.string.no_transactions_yet)
+    val noTransactionsSubtitleText = stringResource(R.string.no_transactions_subtitle)
+    val manageCategoriesText = stringResource(R.string.manage_categories)
+    val deleteDescText = stringResource(R.string.delete_desc)
+    val dialogOkText = stringResource(R.string.dialog_ok)
+
     val categoryFoodDining = stringResource(R.string.category_food_dining)
     val categoryTransportation = stringResource(R.string.category_transportation)
     val categoryShopping = stringResource(R.string.category_shopping)
@@ -179,7 +186,6 @@ fun ExpenseScreen(
         }
     }
 
-    // Current month expenses for budget
     val calendar = Calendar.getInstance()
     val currentMonth = calendar.get(Calendar.MONTH)
     val currentYear = calendar.get(Calendar.YEAR)
@@ -220,7 +226,6 @@ fun ExpenseScreen(
             contentPadding = PaddingValues(top = 20.dp, bottom = 24.dp)
         ) {
 
-            // ============ HEADER ============
             item {
                 Row(
                     Modifier.fillMaxWidth(),
@@ -229,13 +234,13 @@ fun ExpenseScreen(
                 ) {
                     Column {
                         Text(
-                            text = "CostKeeper",
+                            text = appNameText,
                             color = textPrimary,
                             style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.ExtraBold
                         )
                         Text(
-                            text = "Track your money",
+                            text = headerSubtitleText,
                             color = textMuted,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -257,12 +262,9 @@ fun ExpenseScreen(
                 }
             }
 
-            // ============ BALANCE CARD ============
             item {
                 Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = PrimaryBlue
-                    ),
+                    colors = CardDefaults.cardColors(containerColor = PrimaryBlue),
                     shape = RoundedCornerShape(20.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -293,7 +295,7 @@ fun ExpenseScreen(
                         ) {
                             Column {
                                 Text(
-                                    text = "Income",
+                                    text = incomeText,
                                     color = Color.White.copy(alpha = 0.7f),
                                     style = MaterialTheme.typography.labelSmall
                                 )
@@ -306,7 +308,7 @@ fun ExpenseScreen(
                             }
                             Column {
                                 Text(
-                                    text = "Expense",
+                                    text = expenseText,
                                     color = Color.White.copy(alpha = 0.7f),
                                     style = MaterialTheme.typography.labelSmall
                                 )
@@ -322,7 +324,6 @@ fun ExpenseScreen(
                 }
             }
 
-            // ============ BUDGET CARD ============
             item {
                 BudgetCard(
                     budget = monthlyBudget,
@@ -333,7 +334,6 @@ fun ExpenseScreen(
                 )
             }
 
-            // ============ MODE TOGGLE ============
             item {
                 ToggleMode(
                     mode = mode,
@@ -344,7 +344,6 @@ fun ExpenseScreen(
                 )
             }
 
-            // ============ ADD FORM ============
             item {
                 AddExpenseForm(
                     amount = amount,
@@ -386,7 +385,6 @@ fun ExpenseScreen(
                 )
             }
 
-            // ============ SEARCH ============
             item {
                 SearchBar(
                     query = searchQuery,
@@ -395,10 +393,9 @@ fun ExpenseScreen(
                 )
             }
 
-            // ============ LIST HEADER ============
             item {
                 Text(
-                    text = "TRANSACTIONS".uppercase(),
+                    text = transactionsLabelText.uppercase(),
                     color = textMuted,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
@@ -407,7 +404,6 @@ fun ExpenseScreen(
                 )
             }
 
-            // ============ EXPENSE LIST ============
             if (filteredExpenses.isEmpty() && searchQuery.isNotEmpty()) {
                 item {
                     EmptyState(
@@ -418,7 +414,11 @@ fun ExpenseScreen(
                 }
             } else if (filteredExpenses.isEmpty()) {
                 item {
-                    ExpensesEmptyState(isDarkTheme = isDarkTheme)
+                    ExpensesEmptyState(
+                        isDarkTheme = isDarkTheme,
+                        title = noTransactionsYetText,
+                        subtitle = noTransactionsSubtitleText
+                    )
                 }
             } else {
                 items(filteredExpenses) { expenseItem ->
@@ -427,12 +427,12 @@ fun ExpenseScreen(
                         onDelete = { viewModel.deleteExpense(expenseItem) },
                         onEdit = { selectedExpense = expenseItem },
                         isDarkTheme = isDarkTheme,
-                        currency = selectedCurrency
+                        currency = selectedCurrency,
+                        deleteDesc = deleteDescText
                     )
                 }
             }
 
-            // ============ BANNER AD ============
             item {
                 YandexBannerAd(
                     modifier = Modifier.padding(top = 8.dp),
@@ -441,7 +441,6 @@ fun ExpenseScreen(
             }
         }
 
-        // ============ SETTINGS DIALOG ============
         if (showSettings) {
             SettingsDialog(
                 viewModel = viewModel,
@@ -533,12 +532,12 @@ fun ExpenseScreen(
                 systemDefaultText = systemDefaultText,
                 customSelectedText = customSelectedText,
                 lightText = lightText,
-                darkText = darkText
+                darkText = darkText,
+                manageCategoriesText = manageCategoriesText
             )
         }
     }
 
-    // ============ DATE PICKER ============
     if (showDatePicker) {
         CustomDatePickerDialog(
             initialDate = selectedDate,
@@ -548,7 +547,6 @@ fun ExpenseScreen(
         )
     }
 
-    // ============ EDIT DIALOG ============
     selectedExpense?.let { expense ->
         EditExpenseDialog(
             expense = expense,
@@ -559,7 +557,6 @@ fun ExpenseScreen(
         )
     }
 
-    // ============ BUDGET DIALOG ============
     if (showBudgetDialog) {
         EditBudgetDialog(
             currentBudget = monthlyBudget,
@@ -573,7 +570,6 @@ fun ExpenseScreen(
         )
     }
 
-    // ============ CATEGORY MANAGER ============
     if (showCategoryManager) {
         CategoryManagerDialog(
             customCategories = customCategories,
@@ -590,7 +586,6 @@ fun ExpenseScreen(
         )
     }
 
-    // ============ CURRENCY SELECTOR ============
     if (showCurrencySelector) {
         CurrencySelectorDialog(
             currentCurrency = selectedCurrency,
@@ -603,13 +598,11 @@ fun ExpenseScreen(
         )
     }
 
-    // ============ SHARE REPORT ============
     if (showShareReportDialog) {
         ShareReportDialog(
             onShare = {
                 scope.launch {
                     isGeneratingReport = true
-
                     val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
                     val endDate = Date()
                     val startDate = Date(System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000)
@@ -786,9 +779,7 @@ private fun AddExpenseForm(
                 ) {
                     categories.forEach { cat ->
                         DropdownMenuItem(
-                            text = {
-                                Text(cat, color = textPrimary)
-                            },
+                            text = { Text(cat, color = textPrimary) },
                             onClick = {
                                 onCategorySelected(cat)
                                 expanded = false
@@ -829,7 +820,8 @@ fun ExpenseItemRow(
     onDelete: () -> Unit,
     onEdit: () -> Unit,
     isDarkTheme: Boolean,
-    currency: AppCurrency
+    currency: AppCurrency,
+    deleteDesc: String
 ) {
     val isIncome = expense.amount > 0
 
@@ -865,7 +857,6 @@ fun ExpenseItemRow(
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Category icon
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -881,7 +872,6 @@ fun ExpenseItemRow(
 
             Spacer(Modifier.width(12.dp))
 
-            // Category + date
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = expense.category,
@@ -897,7 +887,6 @@ fun ExpenseItemRow(
                 )
             }
 
-            // Amount
             Text(
                 text = "${if (isIncome) "+" else "-"}${currency.symbol}${"%.2f".format(abs(expense.amount))}",
                 color = if (isIncome) IncomeGreen else ExpenseRed,
@@ -907,14 +896,13 @@ fun ExpenseItemRow(
 
             Spacer(Modifier.width(8.dp))
 
-            // Delete
             IconButton(
                 onClick = onDelete,
                 modifier = Modifier.size(32.dp)
             ) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Delete",
+                    contentDescription = deleteDesc,
                     tint = textMuted,
                     modifier = Modifier.size(18.dp)
                 )
@@ -980,7 +968,11 @@ fun ToggleMode(
 /* ================= EMPTY STATE ================= */
 
 @Composable
-fun ExpensesEmptyState(isDarkTheme: Boolean) {
+fun ExpensesEmptyState(
+    isDarkTheme: Boolean,
+    title: String,
+    subtitle: String
+) {
     val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
     val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
 
@@ -1002,14 +994,14 @@ fun ExpensesEmptyState(isDarkTheme: Boolean) {
         }
         Spacer(modifier = Modifier.height(20.dp))
         Text(
-            text = "No transactions yet",
+            text = title,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = textPrimary
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Add your first expense above",
+            text = subtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = textMuted,
             textAlign = TextAlign.Center
@@ -1062,19 +1054,18 @@ fun SettingsDialog(
     systemDefaultText: String,
     customSelectedText: String,
     lightText: String,
-    darkText: String
+    darkText: String,
+    manageCategoriesText: String
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var isExporting by remember { mutableStateOf(false) }
-    // Security state
     var lockEnabled by remember { mutableStateOf(SecurityManager.isLockEnabled(context)) }
     var biometricEnabled by remember { mutableStateOf(SecurityManager.isBiometricEnabled(context)) }
     var autoLockMinutes by remember { mutableStateOf(SecurityManager.getAutoLockMinutes(context)) }
     var showPinSetup by remember { mutableStateOf(false) }
     val biometricAvailable = remember { BiometricHelper.canUseBiometric(context) }
-
 
     val surfaceBg = if (isDarkTheme) DarkSurfaceElevated else LightSurfaceElevated
     val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
@@ -1100,7 +1091,6 @@ fun SettingsDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Theme
                 SectionLabel(themeText, isDarkTheme)
                 ThemeToggle(
                     isDarkTheme = isDarkTheme,
@@ -1110,10 +1100,8 @@ fun SettingsDialog(
                 )
                 HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
 
-                // ============ SECURITY ============
                 SectionLabel(stringResource(R.string.security_section), isDarkTheme)
 
-                // Lock toggle
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -1131,10 +1119,8 @@ fun SettingsDialog(
                         checked = lockEnabled,
                         onCheckedChange = { enabled ->
                             if (enabled) {
-                                // Open PIN setup
                                 showPinSetup = true
                             } else {
-                                // Disable: clear PIN
                                 SecurityManager.clearPin(context)
                                 lockEnabled = false
                                 biometricEnabled = false
@@ -1147,7 +1133,6 @@ fun SettingsDialog(
                     )
                 }
 
-                // Biometric toggle (only if lock is enabled)
                 if (lockEnabled && biometricAvailable) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -1176,7 +1161,6 @@ fun SettingsDialog(
                     }
                 }
 
-                // Auto-lock timer (only if lock is enabled)
                 if (lockEnabled) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
@@ -1224,10 +1208,8 @@ fun SettingsDialog(
                     }
                 }
 
-
                 HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
 
-                // Language
                 SectionLabel(languageText, isDarkTheme)
 
                 Row(
@@ -1241,7 +1223,6 @@ fun SettingsDialog(
 
                 HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
 
-                // Currency
                 SectionLabel(currencyText, isDarkTheme)
 
                 OutlinedButton(
@@ -1261,7 +1242,6 @@ fun SettingsDialog(
 
                 HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
 
-                // Categories
                 SectionLabel(categoriesText, isDarkTheme)
 
                 OutlinedButton(
@@ -1272,12 +1252,11 @@ fun SettingsDialog(
                 ) {
                     Icon(Icons.Default.Edit, null, tint = PrimaryBlue)
                     Spacer(Modifier.width(8.dp))
-                    Text("Manage Categories", color = textPrimary)
+                    Text(manageCategoriesText, color = textPrimary)
                 }
 
                 HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
 
-                // Data
                 SectionLabel(dataSectionText, isDarkTheme)
 
                 OutlinedButton(
@@ -1336,7 +1315,6 @@ fun SettingsDialog(
 
                 HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
 
-                // Danger zone
                 SectionLabel(dangerZoneText, isDarkTheme, ExpenseRed)
 
                 OutlinedButton(
@@ -1353,7 +1331,6 @@ fun SettingsDialog(
 
                 HorizontalDivider(color = if (isDarkTheme) DividerDark else LightDivider)
 
-                // About
                 SectionLabel(aboutText, isDarkTheme)
 
                 Column {
@@ -1378,25 +1355,24 @@ fun SettingsDialog(
             }
         }
     )
-    // ============ PIN SETUP MODAL ============
+
     if (showPinSetup) {
         androidx.compose.ui.window.Dialog(
             onDismissRequest = { showPinSetup = false },
             properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
         ) {
-            androidx.compose.foundation.layout.Box(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(if (isDarkTheme) DarkBackground else LightBackground)
             ) {
-                             LockScreen(
+                LockScreen(
                     isDarkTheme = isDarkTheme,
                     isSetupMode = true,
                     onSuccess = {
                         showPinSetup = false
                         lockEnabled = true
                         SecurityManager.setLockEnabled(context, true)
-                        // Auto-enable biometric if device supports it
                         if (BiometricHelper.canUseBiometric(context)) {
                             biometricEnabled = true
                             SecurityManager.setBiometricEnabled(context, true)
@@ -1407,7 +1383,6 @@ fun SettingsDialog(
             }
         }
     }
-
 
     if (showDeleteConfirmation) {
         AlertDialog(
