@@ -44,7 +44,7 @@
     <string name="danger_zone">Опасная зона</string>
     <string name="delete_all_data">Удалить все данные</string>
     <string name="about">О приложении</string>
-    <string name="version">Версия 1.0.0</string>
+   <string name="version">Версия 2.0.0</string>
     <string name="tagline">Отслеживайте свои расходы и доходы легко.</string>
     <string name="close">Закрыть</string>
     <string name="cancel">Отмена</string>
@@ -100,4 +100,95 @@
     <string name="biometric_enabled">Разблокировать по биометрии</string>
     <string name="auto_lock_label">Автоблокировка через</string>
     <string name="auto_lock_never">Никогда</string>
+
+    <!-- Lock Screen -->
+    <string name="lock_title_enter">Введите PIN-код</string>
+    <string name="lock_subtitle_enter">Разблокируйте CostKeeper для продолжения</string>
+    <string name="lock_title_create">Создайте PIN-код</string>
+    <string name="lock_title_confirm">Подтвердите PIN-код</string>
+    <string name="lock_subtitle_create">Выберите 4-значный код для блокировки</string>
+    <string name="lock_subtitle_confirm">Введите тот же PIN-код снова</string>
+    <string name="lock_title_hint">Добавьте подсказку (необязательно)</string>
+    <string name="lock_subtitle_hint">Поможет вспомнить, если забудете</string>
+    <string name="lock_hint_placeholder">например, Год рождения</string>
+    <string name="lock_skip">Пропустить</string>
+    <string name="lock_save">Сохранить</string>
+    <string name="lock_error_mismatch">PIN-коды не совпадают. Попробуйте снова.</string>
+    <string name="lock_error_incorrect">Неверный PIN-код.</string>
+    <string name="lock_error_attempts_left">попыток осталось</string>
+    <string name="lock_error_too_many">Слишком много попыток. Попробуйте позже.</string>
+    <string name="lock_biometric_unavailable">Биометрия недоступна</string>
+    <string name="lock_show_hint">Показать подсказку</string>
+    <string name="lock_hide_hint">Скрыть подсказку</string>
+    <string name="lock_biometric_content_desc">Биометрия</string>
+    <string name="lock_backspace_desc">Удалить</string>
+
+    <!-- Main Header -->
+    <string name="header_subtitle">Управляйте своими финансами</string>
+
+    <!-- Analytics -->
+    <string name="analytics_subtitle">Ваши последние 7 дней</string>
+    <string name="analytics_this_week_label">НА ЭТОЙ НЕДЕЛЕ</string>
+    <string name="analytics_net_balance">Чистый баланс</string>
+    <string name="analytics_weekly_activity">НЕДЕЛЬНАЯ АКТИВНОСТЬ</string>
+    <string name="analytics_daily_income_vs_expense">Доходы и расходы по дням</string>
+    <string name="analytics_no_activity">Нет активности на этой неделе</string>
+    <string name="analytics_vs_last_week">ПРОТИВ ПРОШЛОЙ НЕДЕЛИ</string>
+    <string name="analytics_how_compares">Сравнение с прошлой неделей</string>
+    <string name="analytics_spending_breakdown">РАСХОДЫ ПО КАТЕГОРИЯМ</string>
+    <string name="analytics_tap_slice">Нажмите на сектор для деталей</string>
+    <string name="analytics_no_expenses_week">Нет расходов на этой неделе</string>
+    <string name="analytics_expenses_by_category">Расходы по категориям</string>
+    <string name="analytics_income_by_category">Доходы по категориям</string>
+    <string name="analytics_no_income_week">Нет доходов на этой неделе</string>
+    <string name="analytics_total">всего</string>
+    <string name="analytics_categories_count">категорий</string>
+    <string name="analytics_total_label">ИТОГО</string>
+
+    <!-- Transactions -->
+    <string name="transactions_label">ОПЕРАЦИИ</string>
+    <string name="no_transactions_yet">Пока нет операций</string>
+    <string name="no_transactions_subtitle">Добавьте первую запись выше</string>
+
+    <!-- Manage / Categories -->
+    <string name="manage_categories">Управление категориями</string>
+    <string name="categories_title">Категории</string>
+    <string name="categories_subtitle">Управляйте своими категориями</string>
+    <string name="new_category_hint">Новая категория</string>
+    <string name="your_categories_label">ВАШИ КАТЕГОРИИ</string>
+    <string name="no_custom_categories">Пока нет своих категорий. Добавьте выше!</string>
+    <string name="done">Готово</string>
+    <string name="please_enter_category_name">Введите название категории</string>
+    <string name="delete_desc">Удалить</string>
+
+    <!-- Currency -->
+    <string name="currency_title">Валюта</string>
+    <string name="currency_subtitle">Выберите предпочитаемую валюту</string>
+    <string name="apply">Применить</string>
+    <string name="selected_desc">Выбрано</string>
+
+    <!-- Edit Expense -->
+    <string name="edit_income">Редактировать доход</string>
+    <string name="edit_expense">Редактировать расход</string>
+    <string name="edit_subtitle">Обновите данные ниже</string>
+    <string name="save_changes">Сохранить изменения</string>
+
+    <!-- Share Report -->
+    <string name="share_report_title">Поделиться отчётом</string>
+    <string name="share_report_subtitle">Создать красивую картинку с отчётом</string>
+    <string name="share_report_generating">Создаём отчёт...</string>
+    <string name="share_report_wait">Пожалуйста, подождите</string>
+    <string name="share_report_description">Отчёт будет включать краткое изложение вашего баланса, доходов, расходов и основных категорий трат.</string>
+    <string name="share_report_included">Что включено</string>
+    <string name="share_report_balance">Баланс</string>
+    <string name="share_report_income">Доход</string>
+    <string name="share_report_top">Топ</string>
+    <string name="share_report_generate_share">Создать и поделиться</string>
+
+    <!-- Date Picker -->
+    <string name="date_label_upper">ДАТА</string>
+    <string name="dialog_ok">ОК</string>
+
+    <!-- Budget Card -->
+    <string name="budget_of">из</string>
 </resources>

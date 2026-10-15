@@ -36,7 +36,7 @@
     <string name="danger_zone">危险区域</string>
     <string name="delete_all_data">删除所有数据</string>
     <string name="about">关于</string>
-    <string name="version">版本 1.0.0</string>
+    <string name="version">版本 2.0.0</string>
     <string name="tagline">轻松追踪您的支出和收入</string>
     <string name="close">关闭</string>
     <string name="cancel">取消</string>
@@ -94,4 +94,94 @@
     <string name="auto_lock_label">自动锁定时间</string>
     <string name="auto_lock_never">永不</string>
 
+    <!-- Lock Screen -->
+    <string name="lock_title_enter">输入 PIN 码</string>
+    <string name="lock_subtitle_enter">解锁 CostKeeper 以继续</string>
+    <string name="lock_title_create">创建 PIN 码</string>
+    <string name="lock_title_confirm">确认 PIN 码</string>
+    <string name="lock_subtitle_create">选择一个 4 位数字密码锁定应用</string>
+    <string name="lock_subtitle_confirm">再次输入相同的 PIN 码</string>
+    <string name="lock_title_hint">添加提示（可选）</string>
+    <string name="lock_subtitle_hint">忘记时帮助您回忆</string>
+    <string name="lock_hint_placeholder">例如：我的生日年份</string>
+    <string name="lock_skip">跳过</string>
+    <string name="lock_save">保存</string>
+    <string name="lock_error_mismatch">PIN 码不匹配，请重试。</string>
+    <string name="lock_error_incorrect">PIN 码错误。</string>
+    <string name="lock_error_attempts_left">次尝试机会</string>
+    <string name="lock_error_too_many">尝试次数过多，请稍后再试。</string>
+    <string name="lock_biometric_unavailable">生物识别不可用</string>
+    <string name="lock_show_hint">显示提示</string>
+    <string name="lock_hide_hint">隐藏提示</string>
+    <string name="lock_biometric_content_desc">生物识别</string>
+    <string name="lock_backspace_desc">删除</string>
+
+    <!-- Main Header -->
+    <string name="header_subtitle">轻松管理您的财务</string>
+
+    <!-- Analytics -->
+    <string name="analytics_subtitle">您最近 7 天的概览</string>
+    <string name="analytics_this_week_label">本周</string>
+    <string name="analytics_net_balance">净余额</string>
+    <string name="analytics_weekly_activity">本周活动</string>
+    <string name="analytics_daily_income_vs_expense">每日收支对比</string>
+    <string name="analytics_no_activity">本周没有活动</string>
+    <string name="analytics_vs_last_week">对比上周</string>
+    <string name="analytics_how_compares">本周与上周对比</string>
+    <string name="analytics_spending_breakdown">支出明细</string>
+    <string name="analytics_tap_slice">点击扇形查看详情</string>
+    <string name="analytics_no_expenses_week">本周没有支出</string>
+    <string name="analytics_expenses_by_category">按类别统计支出</string>
+    <string name="analytics_income_by_category">按类别统计收入</string>
+    <string name="analytics_no_income_week">本周没有收入</string>
+    <string name="analytics_total">总计</string>
+    <string name="analytics_categories_count">个类别</string>
+    <string name="analytics_total_label">总计</string>
+
+    <!-- Transactions -->
+    <string name="transactions_label">交易记录</string>
+    <string name="no_transactions_yet">暂无交易</string>
+    <string name="no_transactions_subtitle">在上方添加您的第一笔记录</string>
+
+    <!-- Manage / Categories -->
+    <string name="manage_categories">管理类别</string>
+    <string name="categories_title">类别</string>
+    <string name="categories_subtitle">管理您的自定义类别</string>
+    <string name="new_category_hint">新类别</string>
+    <string name="your_categories_label">您的类别</string>
+    <string name="no_custom_categories">还没有自定义类别，请在上方添加！</string>
+    <string name="done">完成</string>
+    <string name="please_enter_category_name">请输入类别名称</string>
+    <string name="delete_desc">删除</string>
+
+    <!-- Currency -->
+    <string name="currency_title">货币</string>
+    <string name="currency_subtitle">选择您偏好的货币</string>
+    <string name="apply">应用</string>
+    <string name="selected_desc">已选择</string>
+
+    <!-- Edit Expense -->
+    <string name="edit_income">编辑收入</string>
+    <string name="edit_expense">编辑支出</string>
+    <string name="edit_subtitle">更新以下信息</string>
+    <string name="save_changes">保存修改</string>
+
+    <!-- Share Report -->
+    <string name="share_report_title">分享报告</string>
+    <string name="share_report_subtitle">生成一张精美的汇总图片</string>
+    <string name="share_report_generating">正在生成报告...</string>
+    <string name="share_report_wait">请稍候</string>
+    <string name="share_report_description">您的报告将包含余额、收入、支出和主要支出类别的清晰摘要。</string>
+    <string name="share_report_included">包含内容</string>
+    <string name="share_report_balance">余额</string>
+    <string name="share_report_income">收入</string>
+    <string name="share_report_top">主要</string>
+    <string name="share_report_generate_share">生成并分享</string>
+
+    <!-- Date Picker -->
+    <string name="date_label_upper">日期</string>
+    <string name="dialog_ok">确定</string>
+
+    <!-- Budget Card -->
+    <string name="budget_of">共</string>
 </resources>

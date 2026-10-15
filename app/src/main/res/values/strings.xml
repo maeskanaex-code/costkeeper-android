@@ -44,7 +44,7 @@
     <string name="danger_zone">Danger Zone</string>
     <string name="delete_all_data">Delete All Data</string>
     <string name="about">About</string>
-    <string name="version">Version 1.0.0</string>
+       <string name="version">Version 2.0.0</string>
     <string name="tagline">Track your expenses and income with ease.</string>
     <string name="close">Close</string>
     <string name="cancel">Cancel</string>
@@ -101,4 +101,95 @@
     <string name="biometric_enabled">Unlock with biometric</string>
     <string name="auto_lock_label">Auto-lock after</string>
     <string name="auto_lock_never">Never</string>
+
+    <!-- Lock Screen -->
+    <string name="lock_title_enter">Enter your PIN</string>
+    <string name="lock_subtitle_enter">Unlock CostKeeper to continue</string>
+    <string name="lock_title_create">Create your PIN</string>
+    <string name="lock_title_confirm">Confirm your PIN</string>
+    <string name="lock_subtitle_create">Choose a 4-digit code to lock the app</string>
+    <string name="lock_subtitle_confirm">Enter the same PIN again</string>
+    <string name="lock_title_hint">Add a hint (optional)</string>
+    <string name="lock_subtitle_hint">Helps you remember if you forget</string>
+    <string name="lock_hint_placeholder">e.g. My birthday year</string>
+    <string name="lock_skip">Skip</string>
+    <string name="lock_save">Save</string>
+    <string name="lock_error_mismatch">PINs don\'t match. Try again.</string>
+    <string name="lock_error_incorrect">Incorrect PIN.</string>
+    <string name="lock_error_attempts_left">attempts left</string>
+    <string name="lock_error_too_many">Too many attempts. Try again.</string>
+    <string name="lock_biometric_unavailable">Biometric not available</string>
+    <string name="lock_show_hint">Show hint</string>
+    <string name="lock_hide_hint">Hide hint</string>
+    <string name="lock_biometric_content_desc">Biometric</string>
+    <string name="lock_backspace_desc">Delete</string>
+
+    <!-- Main Header -->
+    <string name="header_subtitle">Track your money</string>
+
+    <!-- Analytics -->
+    <string name="analytics_subtitle">Your last 7 days at a glance</string>
+    <string name="analytics_this_week_label">THIS WEEK</string>
+    <string name="analytics_net_balance">Net balance</string>
+    <string name="analytics_weekly_activity">WEEKLY ACTIVITY</string>
+    <string name="analytics_daily_income_vs_expense">Daily income vs expense</string>
+    <string name="analytics_no_activity">No activity this week</string>
+    <string name="analytics_vs_last_week">VS LAST WEEK</string>
+    <string name="analytics_how_compares">How this week compares</string>
+    <string name="analytics_spending_breakdown">SPENDING BREAKDOWN</string>
+    <string name="analytics_tap_slice">Tap a slice for details</string>
+    <string name="analytics_no_expenses_week">No expenses this week</string>
+    <string name="analytics_expenses_by_category">Expenses by Category</string>
+    <string name="analytics_income_by_category">Income by Category</string>
+    <string name="analytics_no_income_week">No income this week</string>
+    <string name="analytics_total">total</string>
+    <string name="analytics_categories_count">categories</string>
+    <string name="analytics_total_label">TOTAL</string>
+
+    <!-- Transactions -->
+    <string name="transactions_label">TRANSACTIONS</string>
+    <string name="no_transactions_yet">No transactions yet</string>
+    <string name="no_transactions_subtitle">Add your first expense above</string>
+
+    <!-- Manage / Categories -->
+    <string name="manage_categories">Manage Categories</string>
+    <string name="categories_title">Categories</string>
+    <string name="categories_subtitle">Manage your custom categories</string>
+    <string name="new_category_hint">New category</string>
+    <string name="your_categories_label">YOUR CATEGORIES</string>
+    <string name="no_custom_categories">No custom categories yet. Add one above!</string>
+    <string name="done">Done</string>
+    <string name="please_enter_category_name">Please enter a category name</string>
+    <string name="delete_desc">Delete</string>
+
+    <!-- Currency -->
+    <string name="currency_title">Currency</string>
+    <string name="currency_subtitle">Choose your preferred currency</string>
+    <string name="apply">Apply</string>
+    <string name="selected_desc">Selected</string>
+
+    <!-- Edit Expense -->
+    <string name="edit_income">Edit Income</string>
+    <string name="edit_expense">Edit Expense</string>
+    <string name="edit_subtitle">Update the details below</string>
+    <string name="save_changes">Save Changes</string>
+
+    <!-- Share Report -->
+    <string name="share_report_title">Share Report</string>
+    <string name="share_report_subtitle">Generate a beautiful summary image</string>
+    <string name="share_report_generating">Generating your report...</string>
+    <string name="share_report_wait">Please wait a moment</string>
+    <string name="share_report_description">Your report will include a clean summary of your balance, income, expenses, and top spending categories.</string>
+    <string name="share_report_included">What\'s included</string>
+    <string name="share_report_balance">Balance</string>
+    <string name="share_report_income">Income</string>
+    <string name="share_report_top">Top</string>
+    <string name="share_report_generate_share">Generate &amp; Share</string>
+
+    <!-- Date Picker -->
+    <string name="date_label_upper">DATE</string>
+       <string name="dialog_ok">OK</string>
+
+    <!-- Budget Card -->
+    <string name="budget_of">of</string>
 </resources>
