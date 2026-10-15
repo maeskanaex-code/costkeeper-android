@@ -3,11 +3,15 @@ package com.mody.costkeeper.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Backspace
+import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,15 +31,6 @@ import com.mody.costkeeper.util.BiometricHelper
 import com.mody.costkeeper.util.SecurityManager
 import kotlinx.coroutines.delay
 
-/**
- * LockScreen — PIN entry UI with optional biometric shortcut.
- *
- * Two modes:
- *  - Setup mode (isSetupMode = true): user creates a new 4-digit PIN.
- *    After first entry, asks for confirmation. If match, saves and calls onSuccess.
- *  - Verify mode (isSetupMode = false): user enters PIN to unlock.
- *    If correct, calls onSuccess. If wrong 3 times, shows error.
- */
 @Composable
 fun LockScreen(
     isDarkTheme: Boolean,
@@ -50,17 +46,19 @@ fun LockScreen(
     var isConfirming by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var attempts by remember { mutableIntStateOf(0) }
-    var shakeError by remember { mutableStateOf(false) }
+
+    var showHintInput by remember { mutableStateOf(false) }
+    var hintText by remember { mutableStateOf("") }
+    var revealedHint by remember { mutableStateOf<String?>(null) }
 
     val biometricAvailable = remember { BiometricHelper.canUseBiometric(context) }
     val biometricEnabled = remember { SecurityManager.isBiometricEnabled(context) }
+    val showBiometricKey = !isSetupMode && biometricAvailable && biometricEnabled
 
     val background = if (isDarkTheme) DarkBackground else LightBackground
     val textPrimary = if (isDarkTheme) TextPrimary else LightTextPrimary
     val textMuted = if (isDarkTheme) TextMuted else LightTextMuted
-    val surfaceColor = if (isDarkTheme) DarkSurface else LightSurface
 
-    // Auto-prompt biometric on entry if available & enabled
     LaunchedEffect(Unit) {
         if (!isSetupMode && biometricEnabled && biometricAvailable) {
             delay(300)
@@ -69,52 +67,44 @@ fun LockScreen(
                 BiometricHelper.promptBiometric(
                     activity = activity,
                     onSuccess = { onSuccess() },
-                    onError = { /* fall back to PIN, ignore */ }
+                    onError = { }
                 )
             }
-        }
-    }
-
-    // Shake animation trigger
-    LaunchedEffect(shakeError) {
-        if (shakeError) {
-            delay(400)
-            shakeError = false
         }
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(background),
-        contentAlignment = Alignment.Center
+            .background(background)
+            .windowInsetsPadding(WindowInsets.systemBars)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
-
-            // ============ HEADER ============
             Box(
                 modifier = Modifier
-                    .size(88.dp)
+                    .size(72.dp)
                     .clip(CircleShape)
                     .background(PrimaryBlueContainer.copy(alpha = 0.4f)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = if (isSetupMode) "🔐" else "🔒",
-                    fontSize = 44.sp
+                    fontSize = 36.sp
                 )
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
 
             Text(
                 text = when {
+                    showHintInput -> "Add a hint (optional)"
                     isSetupMode && !isConfirming -> "Create your PIN"
                     isSetupMode && isConfirming -> "Confirm your PIN"
                     else -> "Enter your PIN"
@@ -125,10 +115,11 @@ fun LockScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
 
             Text(
                 text = when {
+                    showHintInput -> "Helps you remember if you forget"
                     isSetupMode && !isConfirming -> "Choose a 4-digit code to lock the app"
                     isSetupMode && isConfirming -> "Enter the same PIN again"
                     else -> "Unlock CostKeeper to continue"
@@ -138,163 +129,220 @@ fun LockScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.height(24.dp))
 
-            // ============ PIN DOTS ============
-            val currentLength = if (isConfirming) confirmPin.length else pin.length
+            if (showHintInput) {
+                OutlinedTextField(
+                    value = hintText,
+                    onValueChange = { if (it.length <= 40) hintText = it },
+                    placeholder = {
+                        Text(
+                            "e.g. My birthday year",
+                            color = textMuted
+                        )
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = textPrimary,
+                        unfocusedTextColor = textPrimary,
+                        focusedBorderColor = PrimaryBlue,
+                        unfocusedBorderColor = if (isDarkTheme) BorderDark else LightBorder,
+                        cursorColor = PrimaryBlue
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                repeat(4) { index ->
-                    val filled = index < currentLength
-                    Box(
+                Spacer(Modifier.height(20.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            SecurityManager.setPinHint(context, "")
+                            SecurityManager.setPin(context, pin)
+                            SecurityManager.setLockEnabled(context, true)
+                            onSuccess()
+                        },
                         modifier = Modifier
-                            .size(18.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (filled) PrimaryBlue
-                                else if (isDarkTheme) DarkSurfaceHighest
-                                else LightSurfaceHighest
-                            )
-                            .border(
-                                width = if (errorMessage != null) 2.dp else 0.dp,
-                                color = if (errorMessage != null) ExpenseRed else Color.Transparent,
-                                shape = CircleShape
-                            )
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // Error message slot (reserved space so layout doesn't jump)
-            Box(modifier = Modifier.height(24.dp)) {
-                if (errorMessage != null) {
-                    Text(
-                        text = errorMessage!!,
-                        color = ExpenseRed,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            // ============ NUMBER PAD ============
-            NumberPad(
-                isDarkTheme = isDarkTheme,
-                onDigit = { digit ->
-                    errorMessage = null
-                    if (isConfirming) {
-                        if (confirmPin.length < 4) {
-                            confirmPin += digit
-                            if (confirmPin.length == 4) {
-                                if (confirmPin == pin) {
-                                    // Save the PIN
-                                    SecurityManager.setPin(context, pin)
-                                    SecurityManager.setLockEnabled(context, true)
-                                    onSuccess()
-                                } else {
-                                    errorMessage = "PINs don't match. Try again."
-                                    confirmPin = ""
-                                    isConfirming = false
-                                    pin = ""
-                                }
-                            }
-                        }
-                    } else {
-                        if (pin.length < 4) {
-                            pin += digit
-                            if (pin.length == 4) {
-                                if (isSetupMode) {
-                                    // Move to confirmation
-                                    isConfirming = true
-                                } else {
-                                    // Verify mode: check the PIN
-                                    if (SecurityManager.verifyPin(context, pin)) {
-                                        onSuccess()
-                                    } else {
-                                        attempts++
-                                        errorMessage = "Incorrect PIN. ${3 - attempts} attempts left."
-                                        pin = ""
-                                                                                if (attempts >= 3) {
-                                            errorMessage = "Too many attempts. Try again later."
-                                            attempts = 0
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                            .weight(1f)
+                            .height(52.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        border = BorderStroke(1.dp, if (isDarkTheme) BorderDark else LightBorder)
+                    ) {
+                        Text(
+                            "Skip",
+                            color = textPrimary,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
-                },
-                onBackspace = {
-                    errorMessage = null
-                    if (isConfirming) {
-                        if (confirmPin.isNotEmpty()) confirmPin = confirmPin.dropLast(1)
-                    } else {
-                        if (pin.isNotEmpty()) pin = pin.dropLast(1)
+
+                    Button(
+                        onClick = {
+                            SecurityManager.setPinHint(context, hintText.trim())
+                            SecurityManager.setPin(context, pin)
+                            SecurityManager.setLockEnabled(context, true)
+                            onSuccess()
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(52.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Text(
+                            "Save",
+                            color = TextOnAccent,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
-            )
+            } else {
+                val currentLength = if (isConfirming) confirmPin.length else pin.length
 
-            Spacer(Modifier.height(24.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    repeat(4) { index ->
+                        val filled = index < currentLength
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (filled) PrimaryBlue
+                                    else if (isDarkTheme) DarkSurfaceHighest
+                                    else LightSurfaceHighest
+                                )
+                                .then(
+                                    if (errorMessage != null) {
+                                        Modifier.border(2.dp, ExpenseRed, CircleShape)
+                                    } else Modifier
+                                )
+                        )
+                    }
+                }
 
-            // ============ BIOMETRIC BUTTON ============
-            if (!isSetupMode && biometricAvailable && biometricEnabled) {
-                TextButton(
-                    onClick = {
+                Spacer(Modifier.height(10.dp))
+
+                Box(modifier = Modifier.height(22.dp)) {
+                    if (errorMessage != null) {
+                        Text(
+                            text = errorMessage!!,
+                            color = ExpenseRed,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                NumberPad(
+                    isDarkTheme = isDarkTheme,
+                    showBiometricKey = showBiometricKey,
+                    onBiometricClick = {
                         val activity = context as? FragmentActivity
                         if (activity != null) {
                             BiometricHelper.promptBiometric(
                                 activity = activity,
                                 onSuccess = { onSuccess() },
                                 onError = { err ->
-                                    errorMessage = err
+                                    if (err.contains("No biometric", true) ||
+                                        err.contains("not available", true)) {
+                                        errorMessage = "Biometric not available"
+                                    }
                                 }
                             )
                         }
+                    },
+                    onDigit = { digit ->
+                        errorMessage = null
+                        if (isConfirming) {
+                            if (confirmPin.length < 4) {
+                                confirmPin += digit
+                                if (confirmPin.length == 4) {
+                                    if (confirmPin == pin) {
+                                        if (isSetupMode) {
+                                            showHintInput = true
+                                        } else {
+                                            onSuccess()
+                                        }
+                                    } else {
+                                        errorMessage = "PINs don't match. Try again."
+                                        confirmPin = ""
+                                        isConfirming = false
+                                        pin = ""
+                                    }
+                                }
+                            }
+                        } else {
+                            if (pin.length < 4) {
+                                pin += digit
+                                if (pin.length == 4) {
+                                    if (isSetupMode) {
+                                        isConfirming = true
+                                    } else {
+                                        if (SecurityManager.verifyPin(context, pin)) {
+                                            onSuccess()
+                                        } else {
+                                            attempts++
+                                            errorMessage = if (attempts >= 3) {
+                                                attempts = 0
+                                                "Too many attempts. Try again."
+                                            } else {
+                                                "Incorrect PIN. ${3 - attempts} attempts left."
+                                            }
+                                            pin = ""
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    onBackspace = {
+                        errorMessage = null
+                        if (isConfirming) {
+                            if (confirmPin.isNotEmpty()) confirmPin = confirmPin.dropLast(1)
+                        } else {
+                            if (pin.isNotEmpty()) pin = pin.dropLast(1)
+                        }
                     }
-                ) {
-                    Icon(
-                        Icons.Default.Fingerprint,
-                        contentDescription = null,
-                        tint = PrimaryBlue,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        "Use Biometric",
-                        color = PrimaryBlue,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
+                )
 
-            // ============ CANCEL / FORGOT ============
-            if (!isSetupMode) {
-                Spacer(Modifier.height(16.dp))
+                if (!isSetupMode) {
+                    val hint = SecurityManager.getPinHint(context)
+                    if (!hint.isNullOrBlank()) {
+                        Spacer(Modifier.height(16.dp))
 
-                if (onForgotPin != null) {
-                    TextButton(onClick = onForgotPin) {
-                        Text(
-                            "Forgot PIN?",
-                            color = textMuted,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
+                        TextButton(onClick = {
+                            revealedHint = if (revealedHint == null) hint else null
+                        }) {
+                            Text(
+                                text = if (revealedHint == null) "Show hint" else "Hide hint",
+                                color = PrimaryBlue,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
 
-                if (onCancel != null) {
-                    TextButton(onClick = onCancel) {
-                        Text(
-                            "Exit",
-                            color = textMuted,
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                        revealedHint?.let {
+                            Spacer(Modifier.height(4.dp))
+                            Surface(
+                                color = PrimaryBlue.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                     text = it,
+                                    color = PrimaryBlue,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -302,11 +350,11 @@ fun LockScreen(
     }
 }
 
-/* ================= NUMBER PAD ================= */
-
 @Composable
 private fun NumberPad(
     isDarkTheme: Boolean,
+    showBiometricKey: Boolean,
+    onBiometricClick: () -> Unit,
     onDigit: (String) -> Unit,
     onBackspace: () -> Unit
 ) {
@@ -315,45 +363,58 @@ private fun NumberPad(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Row 1: 1 2 3
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             NumberKey("1", keyBg, keyText, onDigit)
             NumberKey("2", keyBg, keyText, onDigit)
             NumberKey("3", keyBg, keyText, onDigit)
         }
-
-        // Row 2: 4 5 6
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             NumberKey("4", keyBg, keyText, onDigit)
             NumberKey("5", keyBg, keyText, onDigit)
             NumberKey("6", keyBg, keyText, onDigit)
         }
-
-        // Row 3: 7 8 9
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             NumberKey("7", keyBg, keyText, onDigit)
             NumberKey("8", keyBg, keyText, onDigit)
             NumberKey("9", keyBg, keyText, onDigit)
         }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (showBiometricKey) {
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryBlue.copy(alpha = 0.12f))
+                        .clickable { onBiometricClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Fingerprint,
+                        contentDescription = "Biometric",
+                        tint = PrimaryBlue,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+            } else {
+                Spacer(Modifier.size(60.dp))
+            }
 
-        // Row 4: empty, 0, backspace
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Spacer(Modifier.size(72.dp))
             NumberKey("0", keyBg, keyText, onDigit)
+
             Box(
                 modifier = Modifier
-                    .size(72.dp)
+                    .size(60.dp)
                     .clip(CircleShape)
                     .clickable { onBackspace() },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    Icons.Default.Backspace,
+                    Icons.AutoMirrored.Filled.Backspace,
                     contentDescription = "Delete",
                     tint = keyText,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(22.dp)
                 )
             }
         }
@@ -369,7 +430,7 @@ private fun NumberKey(
 ) {
     Box(
         modifier = Modifier
-            .size(72.dp)
+            .size(60.dp)
             .clip(CircleShape)
             .background(bgColor)
             .clickable { onDigit(digit) },
@@ -378,7 +439,7 @@ private fun NumberKey(
         Text(
             text = digit,
             color = textColor,
-            fontSize = 28.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight.SemiBold
         )
     }

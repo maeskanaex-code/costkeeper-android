@@ -6,12 +6,13 @@ import java.security.MessageDigest
 import java.security.SecureRandom
 
 /**
- * Manages PIN setup, verification and lock settings via SharedPreferences.
+ * Manages PIN setup, verification, hint and lock settings via SharedPreferences.
  * PIN is stored as SHA-256 hash with a random salt — never in plaintext.
  *
  * Storage keys in "costkeeper_security" prefs:
  *  - pin_hash   : hex SHA-256 of (salt + pin)
  *  - pin_salt   : hex random salt (16 bytes)
+ *  - pin_hint   : optional hint the user writes when setting up the PIN
  *  - lock_enabled : whether the lock is active
  *  - biometric_enabled : whether biometric prompt is offered before PIN
  *  - auto_lock_minutes : minutes of inactivity before re-lock (0 = never, default 5)
@@ -21,6 +22,7 @@ object SecurityManager {
     private const val PREFS = "costkeeper_security"
     private const val KEY_PIN_HASH = "pin_hash"
     private const val KEY_PIN_SALT = "pin_salt"
+    private const val KEY_PIN_HINT = "pin_hint"
     private const val KEY_LOCK_ENABLED = "lock_enabled"
     private const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"
     private const val KEY_AUTO_LOCK_MINUTES = "auto_lock_minutes"
@@ -57,9 +59,20 @@ object SecurityManager {
         prefs(context).edit()
             .remove(KEY_PIN_HASH)
             .remove(KEY_PIN_SALT)
+            .remove(KEY_PIN_HINT)
             .putBoolean(KEY_LOCK_ENABLED, false)
             .putBoolean(KEY_BIOMETRIC_ENABLED, false)
             .apply()
+    }
+
+    // ============ PIN hint ============
+
+    fun setPinHint(context: Context, hint: String) {
+        prefs(context).edit().putString(KEY_PIN_HINT, hint).apply()
+    }
+
+    fun getPinHint(context: Context): String? {
+        return prefs(context).getString(KEY_PIN_HINT, null)
     }
 
     // ============ Lock settings ============

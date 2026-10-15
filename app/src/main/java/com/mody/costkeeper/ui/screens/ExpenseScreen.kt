@@ -1389,13 +1389,18 @@ fun SettingsDialog(
                     .fillMaxSize()
                     .background(if (isDarkTheme) DarkBackground else LightBackground)
             ) {
-                LockScreen(
+                             LockScreen(
                     isDarkTheme = isDarkTheme,
                     isSetupMode = true,
                     onSuccess = {
                         showPinSetup = false
                         lockEnabled = true
                         SecurityManager.setLockEnabled(context, true)
+                        // Auto-enable biometric if device supports it
+                        if (BiometricHelper.canUseBiometric(context)) {
+                            biometricEnabled = true
+                            SecurityManager.setBiometricEnabled(context, true)
+                        }
                     },
                     onCancel = { showPinSetup = false }
                 )
